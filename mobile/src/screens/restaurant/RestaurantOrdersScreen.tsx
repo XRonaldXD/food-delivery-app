@@ -15,6 +15,7 @@ import { Order, OrderStatus } from '../../types';
 const STATUS_COLORS: Record<OrderStatus, string> = {
   placed: '#f59e0b',
   accepted: '#3b82f6',
+  ready: '#f97316',
   picked_up: '#8b5cf6',
   delivered: '#10b981',
   cancelled: '#ef4444',
@@ -108,6 +109,22 @@ export default function RestaurantOrdersScreen() {
               </TouchableOpacity>
             </View>
           )}
+          {item.status === 'accepted' && (
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.readyBtn]}
+                onPress={() => handleUpdateStatus(item, 'ready')}
+              >
+                <Text style={styles.actionBtnText}>🍳 Mark Ready for Pickup</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.cancelBtn]}
+                onPress={() => handleUpdateStatus(item, 'cancelled')}
+              >
+                <Text style={styles.actionBtnText}>❌ Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     />
@@ -137,9 +154,10 @@ const styles = StyleSheet.create({
   address: { fontSize: 13, color: '#666', marginBottom: 4 },
   items: { fontSize: 13, color: '#888', marginBottom: 6 },
   total: { fontSize: 15, fontWeight: '700', color: '#FF6B35', marginBottom: 10 },
-  actions: { flexDirection: 'row' },
-  actionBtn: { flex: 1, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginRight: 10 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  actionBtn: { flex: 1, borderRadius: 8, paddingVertical: 10, alignItems: 'center', minWidth: 80 },
   acceptBtn: { backgroundColor: '#10b981' },
+  readyBtn: { backgroundColor: '#f97316' },
   cancelBtn: { backgroundColor: '#ef4444', marginRight: 0 },
-  actionBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  actionBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
 });

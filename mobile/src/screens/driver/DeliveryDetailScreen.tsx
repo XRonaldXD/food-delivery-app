@@ -20,7 +20,6 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const NEXT_STATUS: Record<string, { label: string; status: OrderStatus } | undefined> = {
-  accepted: { label: '📦 Mark Picked Up', status: 'picked_up' },
   picked_up: { label: '✅ Mark Delivered', status: 'delivered' },
 };
 

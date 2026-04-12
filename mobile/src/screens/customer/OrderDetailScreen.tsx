@@ -14,6 +14,7 @@ import { Order } from '../../types';
 const STATUS_COLOR: Record<string, string> = {
   placed: '#f59e0b',
   accepted: '#3b82f6',
+  ready: '#f97316',
   picked_up: '#8b5cf6',
   delivered: '#10b981',
   cancelled: '#ef4444',
@@ -21,8 +22,9 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   placed: '⏳ Placed',
-  accepted: '✅ Accepted by Driver',
-  picked_up: '🚗 Picked Up',
+  accepted: '🍳 Accepted by Restaurant',
+  ready: '🎁 Ready for Pickup',
+  picked_up: '🚗 On the Way',
   delivered: '🎉 Delivered',
   cancelled: '❌ Cancelled',
 };
