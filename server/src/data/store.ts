@@ -4,7 +4,7 @@
  */
 
 import bcrypt from 'bcryptjs';
-import { User, Restaurant, Order } from '../types';
+import { User, Restaurant, Order, ChatMessage, DriverLocation } from '../types';
 
 // Pre-seeded test accounts (password: "password123" for all)
 const PASSWORD_HASH = bcrypt.hashSync('password123', 10);
@@ -42,6 +42,10 @@ export const users: User[] = [
 ];
 
 export const orders: Order[] = [];
+
+export const chatMessages: ChatMessage[] = [];
+
+export const driverLocations: DriverLocation[] = [];
 
 export const restaurants: Restaurant[] = [
   {

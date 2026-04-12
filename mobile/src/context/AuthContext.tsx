@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, setToken, removeToken, getToken } from '../api/client';
+import { authApi, userApi, setToken, removeToken, getToken } from '../api/client';
 import { User } from '../types';
 
 /** Decode JWT payload without verifying signature (verification happens on the server). */
@@ -23,6 +23,7 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, role: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -72,8 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user: null, token: null, isLoading: false });
   };
 
+  const updateProfile = async (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+    const updated = await userApi.updateProfile(body);
+    setState((prev) => ({ ...prev, user: prev.user ? { ...prev.user, ...updated } : updated }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

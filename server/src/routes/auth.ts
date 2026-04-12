@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { users } from '../data/store';
-import { JWT_SECRET } from '../middleware/auth';
+import { JWT_SECRET, authenticate, AuthRequest } from '../middleware/auth';
 import { Role } from '../types';
 
 const router = Router();
@@ -82,6 +82,48 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     token,
     user: { id: user.id, email: user.email, role: user.role, name: user.name, restaurantId: user.restaurantId },
   });
+});
+
+router.put('/profile', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user!.userId;
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const { name, phone, email, currentPassword, newPassword } = req.body as {
+    name?: string;
+    phone?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  };
+
+  if (email && email !== user.email) {
+    if (users.find((u) => u.email === email && u.id !== userId)) {
+      res.status(409).json({ error: 'Email already in use' });
+      return;
+    }
+    user.email = email;
+  }
+  if (name !== undefined) user.name = name;
+  if (phone !== undefined) user.phone = phone;
+
+  if (newPassword) {
+    if (!currentPassword) {
+      res.status(400).json({ error: 'currentPassword is required to change password' });
+      return;
+    }
+    const match = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!match) {
+      res.status(401).json({ error: 'Current password is incorrect' });
+      return;
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+  }
+
+  res.json({ id: user.id, email: user.email, role: user.role, name: user.name, phone: user.phone, restaurantId: user.restaurantId });
 });
 
 export default router;

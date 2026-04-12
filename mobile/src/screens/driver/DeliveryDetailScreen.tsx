@@ -7,8 +7,9 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  Linking,
 } from 'react-native';
-import { orderApi } from '../../api/client';
+import { orderApi, locationApi } from '../../api/client';
 import { Order, OrderStatus } from '../../types';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -23,11 +24,12 @@ const NEXT_STATUS: Record<string, { label: string; status: OrderStatus } | undef
   picked_up: { label: '✅ Mark Delivered', status: 'delivered' },
 };
 
-export default function DeliveryDetailScreen({ route }: { route: any }) {
+export default function DeliveryDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [sharingLocation, setSharingLocation] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -56,6 +58,25 @@ export default function DeliveryDetailScreen({ route }: { route: any }) {
     }
   };
 
+  const handleShareLocation = async () => {
+    setSharingLocation(true);
+    try {
+      // Mock coordinates (San Francisco)
+      await locationApi.updateDriverLocation({ orderId, latitude: 37.7749, longitude: -122.4194 });
+      Alert.alert('Location Shared', 'Your location has been shared with the customer.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setSharingLocation(false);
+    }
+  };
+
+  const handleOpenMap = () => {
+    if (!order) return;
+    const encodedAddr = encodeURIComponent(order.deliveryAddress);
+    Linking.openURL(`https://maps.google.com/?q=${encodedAddr}`);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -78,6 +99,27 @@ export default function DeliveryDetailScreen({ route }: { route: any }) {
 
       <Text style={styles.sectionTitle}>Delivery Address</Text>
       <Text style={styles.address}>📍 {order.deliveryAddress}</Text>
+
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.actionSmallBtn} onPress={handleOpenMap}>
+          <Text style={styles.actionSmallBtnText}>📍 Open Map</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionSmallBtn, { backgroundColor: '#8b5cf6' }]}
+          onPress={() => navigation.navigate('Chat', { orderId: order.id })}
+        >
+          <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>💬 Chat</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionSmallBtn, { backgroundColor: '#10b981' }]}
+          onPress={handleShareLocation}
+          disabled={sharingLocation}
+        >
+          <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>
+            {sharingLocation ? '⏳' : '📡 Share Location'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.sectionTitle}>Items</Text>
       {order.items.map((item) => (
@@ -119,6 +161,15 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#444', marginBottom: 10, marginTop: 16 },
   address: { fontSize: 14, color: '#555', lineHeight: 20 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  actionSmallBtn: {
+    borderWidth: 1,
+    borderColor: '#FF6B35',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  actionSmallBtnText: { color: '#FF6B35', fontSize: 13, fontWeight: '600' },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   itemName: { fontSize: 14, color: '#333' },
   itemPrice: { fontSize: 14, color: '#333', fontWeight: '600' },
@@ -135,3 +186,4 @@ const styles = StyleSheet.create({
   },
   actionBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });
+

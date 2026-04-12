@@ -55,6 +55,21 @@ export const authApi = {
     }),
 };
 
+// User profile
+export const userApi = {
+  updateProfile: (body: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }) =>
+    request<import('../types').User>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+};
+
 // Restaurants
 export const restaurantApi = {
   list: () => request<import('../types').RestaurantSummary[]>('/restaurants'),
@@ -65,13 +80,57 @@ export const restaurantApi = {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
+  getMenu: () => request<import('../types').MenuItem[]>('/restaurants/menu/items'),
+  addMenuItem: (body: { name: string; description: string; price: number; imageUrl?: string }) =>
+    request<import('../types').MenuItem>('/restaurants/menu', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  updateMenuItem: (id: string, body: { name?: string; description?: string; price?: number; imageUrl?: string }) =>
+    request<import('../types').MenuItem>(`/restaurants/menu/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  deleteMenuItem: (id: string) =>
+    request<{ success: boolean }>(`/restaurants/menu/${id}`, { method: 'DELETE' }),
+  revenue: (start?: string, end?: string) => {
+    const params = new URLSearchParams();
+    if (start) params.set('start', start);
+    if (end) params.set('end', end);
+    const qs = params.toString();
+    return request<{ totalRevenue: number; monthlyRevenue: number; totalOrders: number; orders: import('../types').Order[] }>(
+      `/restaurants/revenue${qs ? `?${qs}` : ''}`
+    );
+  },
 };
 
 // Admin
 export const adminApi = {
-  users: () => request<import('../types').User[]>('/admin/users'),
+  users: (search?: string) => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+    return request<import('../types').User[]>(`/admin/users${qs}`);
+  },
+  createUser: (body: { email: string; password: string; role: string; name?: string; phone?: string }) =>
+    request<import('../types').User>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  updateUser: (id: string, body: { name?: string; phone?: string; email?: string; role?: string; password?: string }) =>
+    request<import('../types').User>(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  deleteUser: (id: string) =>
+    request<{ success: boolean }>(`/admin/users/${id}`, { method: 'DELETE' }),
   orders: () => request<import('../types').Order[]>('/admin/orders'),
   restaurants: () => request<import('../types').Restaurant[]>('/admin/restaurants'),
+  revenue: () =>
+    request<{
+      totalRevenue: number;
+      perRestaurant: Array<{ restaurantId: string; restaurantName: string; revenue: number; orderCount: number }>;
+      ordersByStatus: Record<string, number>;
+      totalOrders: number;
+    }>('/admin/revenue'),
 };
 
 // Orders
@@ -95,4 +154,26 @@ export const orderApi = {
       method: 'POST',
       body: JSON.stringify({ status }),
     }),
+};
+
+// Chat
+export const chatApi = {
+  getMessages: (orderId: string) =>
+    request<import('../types').ChatMessage[]>(`/chat/${orderId}`),
+  sendMessage: (orderId: string, message: string) =>
+    request<import('../types').ChatMessage>(`/chat/${orderId}`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
+};
+
+// Location
+export const locationApi = {
+  updateDriverLocation: (body: { orderId: string; latitude: number; longitude: number }) =>
+    request<import('../types').DriverLocation>('/locations/driver', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  getOrderLocation: (orderId: string) =>
+    request<import('../types').DriverLocation>(`/locations/order/${orderId}`),
 };

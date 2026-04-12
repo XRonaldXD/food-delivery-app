@@ -13,6 +13,7 @@ export interface User {
   email: string;
   role: Role;
   name: string;
+  phone?: string;
   restaurantId?: string;
 }
 
@@ -64,3 +65,22 @@ export interface CartItem {
   price: number;
   quantity: number;
 }
+
+export interface ChatMessage {
+  id: string;
+  orderId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: Role;
+  message: string;
+  createdAt: string;
+}
+
+export interface DriverLocation {
+  driverId: string;
+  orderId: string;
+  latitude: number;
+  longitude: number;
+  updatedAt: string;
+}
+
