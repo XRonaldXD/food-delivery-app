@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
   address: { fontSize: 13, color: '#666', marginBottom: 4 },
   items: { fontSize: 13, color: '#888', marginBottom: 6 },
   total: { fontSize: 15, fontWeight: '700', color: '#FF6B35', marginBottom: 10 },
-  actions: { flexDirection: 'row', gap: 10 },
-  actionBtn: { flex: 1, borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  actions: { flexDirection: 'row' },
+  actionBtn: { flex: 1, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginRight: 10 },
   acceptBtn: { backgroundColor: '#10b981' },
-  cancelBtn: { backgroundColor: '#ef4444' },
+  cancelBtn: { backgroundColor: '#ef4444', marginRight: 0 },
   actionBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
 });

@@ -74,7 +74,11 @@ router.get('/mine', (req: AuthRequest, res: Response): void => {
   const { userId, role, restaurantId } = req.user!;
   if (role === 'customer') {
     res.json(orders.filter((o) => o.customerId === userId));
-  } else if (role === 'restaurant' && restaurantId) {
+  } else if (role === 'restaurant') {
+    if (!restaurantId) {
+      res.status(403).json({ error: 'No restaurant linked to this account' });
+      return;
+    }
     res.json(orders.filter((o) => o.restaurantId === restaurantId));
   } else if (role === 'admin') {
     res.json(orders);
@@ -144,6 +148,10 @@ router.post('/:id/status', (req: AuthRequest, res: Response): void => {
       return;
     }
   } else if (role === 'restaurant') {
+    if (!restaurantId) {
+      res.status(403).json({ error: 'No restaurant linked to this account' });
+      return;
+    }
     if (order.restaurantId !== restaurantId) {
       res.status(403).json({ error: 'Not your restaurant\'s order' });
       return;
