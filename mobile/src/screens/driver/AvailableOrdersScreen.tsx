@@ -39,7 +39,7 @@ export default function AvailableOrdersScreen({ navigation }: { navigation: any 
       Alert.alert('Order Accepted!', `You accepted order from ${order.restaurantName}`, [
         {
           text: 'View My Orders',
-          onPress: () => navigation.navigate('MyDeliveries'),
+          onPress: () => navigation.navigate('DeliveriesTab', { screen: 'MyDeliveries' }),
         },
         { text: 'OK', style: 'cancel' },
       ]);
