@@ -61,6 +61,13 @@ export const restaurantApi = {
   menu: (id: string) => request<import('../types').Restaurant>(`/restaurants/${id}/menu`),
 };
 
+// Admin
+export const adminApi = {
+  users: () => request<import('../types').User[]>('/admin/users'),
+  orders: () => request<import('../types').Order[]>('/admin/orders'),
+  restaurants: () => request<import('../types').Restaurant[]>('/admin/restaurants'),
+};
+
 // Orders
 export const orderApi = {
   create: (body: {

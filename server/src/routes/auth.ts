@@ -9,19 +9,20 @@ import { Role } from '../types';
 const router = Router();
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { email, password, role, name } = req.body as {
+  const { email, password, role, name, restaurantId } = req.body as {
     email: string;
     password: string;
     role: Role;
     name?: string;
+    restaurantId?: string;
   };
 
   if (!email || !password || !role) {
     res.status(400).json({ error: 'email, password, and role are required' });
     return;
   }
-  if (!['customer', 'driver'].includes(role)) {
-    res.status(400).json({ error: 'role must be customer or driver' });
+  if (!['customer', 'driver', 'restaurant', 'admin'].includes(role)) {
+    res.status(400).json({ error: 'role must be customer, driver, restaurant, or admin' });
     return;
   }
   if (users.find((u) => u.email === email)) {
@@ -36,16 +37,19 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     passwordHash,
     role,
     name: name ?? email.split('@')[0],
+    restaurantId: role === 'restaurant' ? restaurantId : undefined,
   };
   users.push(user);
 
-  const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
-    expiresIn: '7d',
-  });
+  const token = jwt.sign(
+    { userId: user.id, role: user.role, restaurantId: user.restaurantId },
+    JWT_SECRET,
+    { expiresIn: '7d' },
+  );
 
   res.status(201).json({
     token,
-    user: { id: user.id, email: user.email, role: user.role, name: user.name },
+    user: { id: user.id, email: user.email, role: user.role, name: user.name, restaurantId: user.restaurantId },
   });
 });
 
@@ -68,13 +72,15 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
-    expiresIn: '7d',
-  });
+  const token = jwt.sign(
+    { userId: user.id, role: user.role, restaurantId: user.restaurantId },
+    JWT_SECRET,
+    { expiresIn: '7d' },
+  );
 
   res.json({
     token,
-    user: { id: user.id, email: user.email, role: user.role, name: user.name },
+    user: { id: user.id, email: user.email, role: user.role, name: user.name, restaurantId: user.restaurantId },
   });
 });
 
