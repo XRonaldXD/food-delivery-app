@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: '',
             role: payload.role as User['role'],
             name: '',
+            restaurantId: typeof payload.restaurantId === 'string' ? payload.restaurantId : undefined,
           };
           setState({ user: restored, token, isLoading: false });
           return;

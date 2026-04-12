@@ -3,9 +3,43 @@
  * Replace the arrays/maps below with actual DB calls to swap in a real database.
  */
 
+import bcrypt from 'bcryptjs';
 import { User, Restaurant, Order } from '../types';
 
-export const users: User[] = [];
+// Pre-seeded test accounts (password: "password123" for all)
+const PASSWORD_HASH = bcrypt.hashSync('password123', 10);
+
+export const users: User[] = [
+  {
+    id: 'user-customer-1',
+    email: 'customer@test.com',
+    passwordHash: PASSWORD_HASH,
+    role: 'customer',
+    name: 'Test Customer',
+  },
+  {
+    id: 'user-driver-1',
+    email: 'driver@test.com',
+    passwordHash: PASSWORD_HASH,
+    role: 'driver',
+    name: 'Test Driver',
+  },
+  {
+    id: 'user-restaurant-1',
+    email: 'restaurant@test.com',
+    passwordHash: PASSWORD_HASH,
+    role: 'restaurant',
+    name: 'Burger Palace Owner',
+    restaurantId: 'rest-1',
+  },
+  {
+    id: 'user-admin-1',
+    email: 'admin@test.com',
+    passwordHash: PASSWORD_HASH,
+    role: 'admin',
+    name: 'Admin User',
+  },
+];
 
 export const orders: Order[] = [];
 

@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'driver';
+export type Role = 'customer' | 'driver' | 'restaurant' | 'admin';
 
 export type OrderStatus =
   | 'placed'
@@ -13,6 +13,8 @@ export interface User {
   passwordHash: string;
   role: Role;
   name: string;
+  /** For users with role 'restaurant', the id of the restaurant they own. */
+  restaurantId?: string;
 }
 
 export interface MenuItem {
@@ -56,4 +58,5 @@ export interface Order {
 export interface JwtPayload {
   userId: string;
   role: Role;
+  restaurantId?: string;
 }

@@ -4,6 +4,7 @@ import { rateLimit } from 'express-rate-limit';
 import authRouter from './routes/auth';
 import restaurantsRouter from './routes/restaurants';
 import ordersRouter from './routes/orders';
+import adminRouter from './routes/admin';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -35,6 +36,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/auth', authLimiter, authRouter);
 app.use('/restaurants', restaurantsRouter);
 app.use('/orders', ordersRouter);
+app.use('/admin', adminRouter);
 
 app.listen(PORT, () => {
   console.log(`Food Delivery API running on port ${PORT}`);

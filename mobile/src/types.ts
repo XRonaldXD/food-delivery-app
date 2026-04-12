@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'driver';
+export type Role = 'customer' | 'driver' | 'restaurant' | 'admin';
 
 export type OrderStatus =
   | 'placed'
@@ -12,6 +12,7 @@ export interface User {
   email: string;
   role: Role;
   name: string;
+  restaurantId?: string;
 }
 
 export interface MenuItem {

@@ -71,9 +71,13 @@ router.get('/available', requireRole('driver'), (_req: AuthRequest, res: Respons
 
 // GET /orders/mine
 router.get('/mine', (req: AuthRequest, res: Response): void => {
-  const { userId, role } = req.user!;
+  const { userId, role, restaurantId } = req.user!;
   if (role === 'customer') {
     res.json(orders.filter((o) => o.customerId === userId));
+  } else if (role === 'restaurant' && restaurantId) {
+    res.json(orders.filter((o) => o.restaurantId === restaurantId));
+  } else if (role === 'admin') {
+    res.json(orders);
   } else {
     res.json(orders.filter((o) => o.driverId === userId));
   }
@@ -115,7 +119,7 @@ router.post('/:id/status', (req: AuthRequest, res: Response): void => {
     return;
   }
 
-  const { userId, role } = req.user!;
+  const { userId, role, restaurantId } = req.user!;
 
   if (role === 'driver') {
     if (order.driverId !== userId) {
@@ -139,6 +143,17 @@ router.post('/:id/status', (req: AuthRequest, res: Response): void => {
       res.status(409).json({ error: 'Order cannot be cancelled at this stage' });
       return;
     }
+  } else if (role === 'restaurant') {
+    if (order.restaurantId !== restaurantId) {
+      res.status(403).json({ error: 'Not your restaurant\'s order' });
+      return;
+    }
+    if (!['accepted', 'cancelled'].includes(status)) {
+      res.status(400).json({ error: 'Restaurant can only accept or cancel an order' });
+      return;
+    }
+  } else if (role === 'admin') {
+    // admin can set any status
   } else {
     res.status(403).json({ error: 'Forbidden' });
     return;

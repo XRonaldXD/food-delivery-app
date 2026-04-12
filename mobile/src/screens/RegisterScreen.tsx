@@ -18,7 +18,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'customer' | 'driver'>('customer');
+  const [role, setRole] = useState<'customer' | 'driver' | 'restaurant' | 'admin'>('customer');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -71,15 +71,15 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         />
 
         <Text style={styles.label}>I am a:</Text>
-        <View style={styles.roleRow}>
-          {(['customer', 'driver'] as const).map((r) => (
+        <View style={styles.roleGrid}>
+          {(['customer', 'driver', 'restaurant', 'admin'] as const).map((r) => (
             <TouchableOpacity
               key={r}
               style={[styles.roleBtn, role === r && styles.roleBtnActive]}
               onPress={() => setRole(r)}
             >
               <Text style={[styles.roleBtnText, role === r && styles.roleBtnTextActive]}>
-                {r === 'customer' ? '🧑 Customer' : '🚗 Driver'}
+                {r === 'customer' ? '🧑 Customer' : r === 'driver' ? '🚗 Driver' : r === 'restaurant' ? '🍽️ Restaurant' : '🛡️ Admin'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   label: { fontSize: 14, color: '#666', marginBottom: 8 },
-  roleRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  roleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   roleBtn: {
     flex: 1,
     borderWidth: 2,

@@ -26,6 +26,12 @@ import AvailableOrdersScreen from './screens/driver/AvailableOrdersScreen';
 import MyDeliveriesScreen from './screens/driver/MyDeliveriesScreen';
 import DeliveryDetailScreen from './screens/driver/DeliveryDetailScreen';
 
+// Restaurant screens
+import RestaurantOrdersScreen from './screens/restaurant/RestaurantOrdersScreen';
+
+// Admin screens
+import AdminDashboardScreen from './screens/admin/AdminDashboardScreen';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -143,6 +149,53 @@ function DriverTabs() {
   );
 }
 
+function RestaurantTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#FF6B35',
+        tabBarInactiveTintColor: '#999',
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="OrdersTab"
+        component={RestaurantOrdersScreen}
+        options={{ title: 'Orders', tabBarLabel: 'Orders', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text> }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{ title: 'Profile', tabBarLabel: 'Profile', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>👤</Text> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+function AdminTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#FF6B35',
+        tabBarInactiveTintColor: '#999',
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="DashboardTab"
+        component={AdminDashboardScreen}
+        options={{ title: 'Dashboard', tabBarLabel: 'Dashboard', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🛡️</Text> }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{ title: 'Profile', tabBarLabel: 'Profile', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>👤</Text> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+
 export default function Navigation() {
   const { user, token, isLoading } = useAuth();
 
@@ -161,6 +214,10 @@ export default function Navigation() {
           <AuthStack />
         ) : user?.role === 'driver' ? (
           <DriverTabs />
+        ) : user?.role === 'restaurant' ? (
+          <RestaurantTabs />
+        ) : user?.role === 'admin' ? (
+          <AdminTabs />
         ) : (
           <CustomerTabs />
         )}
