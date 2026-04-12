@@ -81,7 +81,7 @@ export default function AvailableOrdersScreen({ navigation }: { navigation: any 
       >
         <Text style={styles.emptyIcon}>🕐</Text>
         <Text style={styles.emptyText}>No available orders right now</Text>
-        <Text style={styles.emptyHint}>Pull down to refresh</Text>
+        <Text style={styles.emptyHint}>Pull to refresh</Text>
       </ScrollView>
     );
   }
