@@ -22,6 +22,7 @@ router.post('/:orderId', (req: AuthRequest, res: Response): void => {
   if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
   const { message } = req.body as { message: string };
   if (!message?.trim()) { res.status(400).json({ error: 'message is required' }); return; }
+  if (message.trim().length > 500) { res.status(400).json({ error: 'message must be 500 characters or fewer' }); return; }
 
   const { userId, role } = req.user!;
   const sender = users.find((u) => u.id === userId);

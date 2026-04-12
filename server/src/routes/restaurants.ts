@@ -37,7 +37,11 @@ router.post('/menu', authenticate, requireRole('restaurant'), (req: AuthRequest,
   if (!name || !description || price === undefined) {
     res.status(400).json({ error: 'name, description, and price are required' }); return;
   }
-  const item: MenuItem = { id: uuidv4(), name, description, price, imageUrl };
+  const numericPrice = Number(price);
+  if (isNaN(numericPrice) || numericPrice < 0) {
+    res.status(400).json({ error: 'price must be a non-negative number' }); return;
+  }
+  const item: MenuItem = { id: uuidv4(), name, description, price: numericPrice, imageUrl };
   restaurant.menu.push(item);
   res.status(201).json(item);
 });
@@ -53,7 +57,13 @@ router.put('/menu/:itemId', authenticate, requireRole('restaurant'), (req: AuthR
   const { name, description, price, imageUrl } = req.body as Partial<MenuItem>;
   if (name !== undefined) item.name = name;
   if (description !== undefined) item.description = description;
-  if (price !== undefined) item.price = price;
+  if (price !== undefined) {
+    const numericPrice = Number(price);
+    if (isNaN(numericPrice) || numericPrice < 0) {
+      res.status(400).json({ error: 'price must be a non-negative number' }); return;
+    }
+    item.price = numericPrice;
+  }
   if (imageUrl !== undefined) item.imageUrl = imageUrl;
   res.json(item);
 });
@@ -83,8 +93,11 @@ router.get('/revenue', authenticate, requireRole('restaurant'), (req: AuthReques
       if (!isNaN(startMs) && new Date(o.createdAt).getTime() < startMs) return false;
     }
     if (end) {
-      const endMs = new Date(end + 'T23:59:59Z').getTime();
-      if (!isNaN(endMs) && new Date(o.createdAt).getTime() > endMs) return false;
+      const endDate = new Date(end);
+      if (!isNaN(endDate.getTime())) {
+        endDate.setUTCHours(23, 59, 59, 999);
+        if (new Date(o.createdAt).getTime() > endDate.getTime()) return false;
+      }
     }
     return true;
   });
