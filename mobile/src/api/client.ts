@@ -59,6 +59,12 @@ export const authApi = {
 export const restaurantApi = {
   list: () => request<import('../types').RestaurantSummary[]>('/restaurants'),
   menu: (id: string) => request<import('../types').Restaurant>(`/restaurants/${id}/menu`),
+  getSettings: () => request<{ autoAccept: boolean }>('/restaurants/settings'),
+  updateSettings: (body: { autoAccept: boolean }) =>
+    request<{ autoAccept: boolean }>('/restaurants/settings', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
 };
 
 // Admin

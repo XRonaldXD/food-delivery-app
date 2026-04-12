@@ -13,7 +13,6 @@ import { orderApi } from '../../api/client';
 import { Order } from '../../types';
 
 const STATUS_COLOR: Record<string, string> = {
-  accepted: '#3b82f6',
   picked_up: '#8b5cf6',
   delivered: '#10b981',
   cancelled: '#ef4444',

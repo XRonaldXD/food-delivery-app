@@ -15,6 +15,7 @@ import { Order } from '../../types';
 const STATUS_COLOR: Record<string, string> = {
   placed: '#f59e0b',
   accepted: '#3b82f6',
+  ready: '#f97316',
   picked_up: '#8b5cf6',
   delivered: '#10b981',
   cancelled: '#ef4444',

@@ -28,6 +28,7 @@ import DeliveryDetailScreen from './screens/driver/DeliveryDetailScreen';
 
 // Restaurant screens
 import RestaurantOrdersScreen from './screens/restaurant/RestaurantOrdersScreen';
+import RestaurantSettingsScreen from './screens/restaurant/RestaurantSettingsScreen';
 
 // Admin screens
 import AdminDashboardScreen from './screens/admin/AdminDashboardScreen';
@@ -162,6 +163,11 @@ function RestaurantTabs() {
         name="OrdersTab"
         component={RestaurantOrdersScreen}
         options={{ title: 'Orders', tabBarLabel: 'Orders', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text> }}
+      />
+      <Tab.Screen
+        name="SettingsTab"
+        component={RestaurantSettingsScreen}
+        options={{ title: 'Settings', tabBarLabel: 'Settings', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>⚙️</Text> }}
       />
       <Tab.Screen
         name="ProfileTab"

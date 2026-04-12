@@ -94,7 +94,7 @@ export default function AvailableOrdersScreen({ navigation }: { navigation: any 
           <View style={styles.footer}>
             <Text style={styles.total}>${item.total.toFixed(2)}</Text>
             <TouchableOpacity style={styles.acceptBtn} onPress={() => handleAccept(item)}>
-              <Text style={styles.acceptBtnText}>Accept</Text>
+              <Text style={styles.acceptBtnText}>Accept Pickup</Text>
             </TouchableOpacity>
           </View>
         </View>

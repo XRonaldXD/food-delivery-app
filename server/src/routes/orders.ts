@@ -47,6 +47,7 @@ router.post('/', requireRole('customer'), (req: AuthRequest, res: Response): voi
 
   const total = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const now = new Date().toISOString();
+  const initialStatus: OrderStatus = restaurant.autoAccept ? 'accepted' : 'placed';
   const order = {
     id: uuidv4(),
     customerId: req.user!.userId,
@@ -54,7 +55,7 @@ router.post('/', requireRole('customer'), (req: AuthRequest, res: Response): voi
     restaurantName: restaurant.name,
     items: orderItems,
     total,
-    status: 'placed' as OrderStatus,
+    status: initialStatus,
     deliveryAddress,
     createdAt: now,
     updatedAt: now,
@@ -65,7 +66,7 @@ router.post('/', requireRole('customer'), (req: AuthRequest, res: Response): voi
 
 // GET /orders/available  (driver)
 router.get('/available', requireRole('driver'), (_req: AuthRequest, res: Response): void => {
-  const available = orders.filter((o) => o.status === 'placed' && !o.driverId);
+  const available = orders.filter((o) => o.status === 'ready' && !o.driverId);
   res.json(available);
 });
 
@@ -104,12 +105,12 @@ router.post('/:id/accept', requireRole('driver'), (req: AuthRequest, res: Respon
     res.status(404).json({ error: 'Order not found' });
     return;
   }
-  if (order.status !== 'placed' || order.driverId) {
+  if (order.status !== 'ready' || order.driverId) {
     res.status(409).json({ error: 'Order is not available to accept' });
     return;
   }
   order.driverId = req.user!.userId;
-  order.status = 'accepted';
+  order.status = 'picked_up';
   order.updatedAt = new Date().toISOString();
   res.json(order);
 });
@@ -130,8 +131,12 @@ router.post('/:id/status', (req: AuthRequest, res: Response): void => {
       res.status(403).json({ error: 'Not your order' });
       return;
     }
-    if (!['picked_up', 'delivered'].includes(status)) {
-      res.status(400).json({ error: 'Driver can only set picked_up or delivered' });
+    if (status !== 'delivered') {
+      res.status(400).json({ error: 'Driver can only set delivered' });
+      return;
+    }
+    if (order.status !== 'picked_up') {
+      res.status(409).json({ error: 'Order must be picked up before marking as delivered' });
       return;
     }
   } else if (role === 'customer') {
@@ -156,8 +161,16 @@ router.post('/:id/status', (req: AuthRequest, res: Response): void => {
       res.status(403).json({ error: 'Not your restaurant\'s order' });
       return;
     }
-    if (!['accepted', 'cancelled'].includes(status)) {
-      res.status(400).json({ error: 'Restaurant can only accept or cancel an order' });
+    if (order.status === 'placed' && !['accepted', 'cancelled'].includes(status)) {
+      res.status(400).json({ error: 'Restaurant can only accept or cancel a placed order' });
+      return;
+    }
+    if (order.status === 'accepted' && !['ready', 'cancelled'].includes(status)) {
+      res.status(400).json({ error: 'Restaurant can only mark accepted order as ready or cancel it' });
+      return;
+    }
+    if (!['placed', 'accepted'].includes(order.status)) {
+      res.status(409).json({ error: 'Order cannot be updated at this stage' });
       return;
     }
   } else if (role === 'admin') {

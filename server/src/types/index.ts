@@ -3,6 +3,7 @@ export type Role = 'customer' | 'driver' | 'restaurant' | 'admin';
 export type OrderStatus =
   | 'placed'
   | 'accepted'
+  | 'ready'
   | 'picked_up'
   | 'delivered'
   | 'cancelled';
@@ -32,6 +33,7 @@ export interface Restaurant {
   imageUrl?: string;
   cuisine: string;
   menu: MenuItem[];
+  autoAccept?: boolean;
 }
 
 export interface OrderItem {
