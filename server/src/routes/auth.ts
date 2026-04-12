@@ -2,19 +2,20 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { users } from '../data/store';
+import { users, restaurants } from '../data/store';
 import { JWT_SECRET, authenticate, AuthRequest } from '../middleware/auth';
 import { Role } from '../types';
 
 const router = Router();
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { email, password, role, name, restaurantId } = req.body as {
+  const { email, password, role, name, restaurantId, restaurantPassword } = req.body as {
     email: string;
     password: string;
     role: Role;
     name?: string;
     restaurantId?: string;
+    restaurantPassword?: string;
   };
 
   if (!email || !password || !role) {
@@ -28,6 +29,28 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   if (users.find((u) => u.email === email)) {
     res.status(409).json({ error: 'Email already registered' });
     return;
+  }
+
+  // For restaurant role, validate restaurantId and restaurantPassword
+  if (role === 'restaurant') {
+    if (!restaurantId) {
+      res.status(400).json({ error: 'restaurantId is required for restaurant accounts' });
+      return;
+    }
+    const restaurant = restaurants.find((r) => r.id === restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ error: 'Restaurant not found' });
+      return;
+    }
+    if (restaurant.restaurantPassword && restaurant.restaurantPassword !== restaurantPassword) {
+      res.status(401).json({ error: 'Invalid restaurant password' });
+      return;
+    }
+    // Check if restaurant already has an owner
+    if (users.find((u) => u.restaurantId === restaurantId && u.role === 'restaurant')) {
+      res.status(409).json({ error: 'This restaurant already has an owner account' });
+      return;
+    }
   }
 
   const passwordHash = await bcrypt.hash(password, 10);

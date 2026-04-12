@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { orderApi } from '../../api/client';
 import { Order } from '../../types';
@@ -32,6 +33,16 @@ export default function AvailableOrdersScreen({ navigation }: { navigation: any 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.getParent()?.addListener('tabPress', () => {
+      if (navigation.isFocused()) {
+        setRefreshing(true);
+        load();
+      }
+    });
+    return () => unsubscribe?.();
+  }, [navigation, load]);
 
   const handleAccept = async (order: Order) => {
     try {
@@ -59,16 +70,19 @@ export default function AvailableOrdersScreen({ navigation }: { navigation: any 
 
   if (orders.length === 0) {
     return (
-      <View style={styles.center}>
+      <ScrollView
+        contentContainerStyle={styles.center}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); load(); }}
+          />
+        }
+      >
         <Text style={styles.emptyIcon}>🕐</Text>
         <Text style={styles.emptyText}>No available orders right now</Text>
-        <TouchableOpacity
-          style={styles.refreshBtn}
-          onPress={() => { setLoading(true); load(); }}
-        >
-          <Text style={styles.refreshBtnText}>Refresh</Text>
-        </TouchableOpacity>
-      </View>
+        <Text style={styles.emptyHint}>Pull down to refresh</Text>
+      </ScrollView>
     );
   }
 
@@ -107,14 +121,8 @@ const styles = StyleSheet.create({
   list: { backgroundColor: '#f9f9f9' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   emptyIcon: { fontSize: 56, marginBottom: 12 },
-  emptyText: { fontSize: 16, color: '#666', marginBottom: 16 },
-  refreshBtn: {
-    backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
-  refreshBtnText: { color: '#fff', fontWeight: 'bold' },
+  emptyText: { fontSize: 16, color: '#666', marginBottom: 8 },
+  emptyHint: { fontSize: 13, color: '#aaa' },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,

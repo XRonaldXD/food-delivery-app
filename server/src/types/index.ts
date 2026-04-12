@@ -35,6 +35,8 @@ export interface Restaurant {
   cuisine: string;
   menu: MenuItem[];
   autoAccept?: boolean;
+  /** Password required to register as an owner of this restaurant. */
+  restaurantPassword?: string;
 }
 
 export interface OrderItem {
