@@ -2,27 +2,36 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   ActivityIndicator,
   Alert,
   RefreshControl,
   SectionList,
+  TouchableOpacity,
 } from 'react-native';
 import { adminApi } from '../../api/client';
 import { User, Order } from '../../types';
 
-export default function AdminDashboardScreen() {
+interface RevenueData {
+  totalRevenue: number;
+  perRestaurant: Array<{ restaurantId: string; restaurantName: string; revenue: number; orderCount: number }>;
+  ordersByStatus: Record<string, number>;
+  totalOrders: number;
+}
+
+export default function AdminDashboardScreen({ navigation }: { navigation: any }) {
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [u, o] = await Promise.all([adminApi.users(), adminApi.orders()]);
+      const [u, o, r] = await Promise.all([adminApi.users(), adminApi.orders(), adminApi.revenue()]);
       setUsers(u);
       setOrders(o.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      setRevenue(r);
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {
@@ -60,7 +69,8 @@ export default function AdminDashboardScreen() {
       }
       sections={[
         { title: 'Overview', data: ['stats'] },
-        { title: `Users (${users.length})`, data: users.map((u) => ({ type: 'user', item: u })) as any[] },
+        { title: 'Revenue', data: ['revenue'] },
+        { title: `Users (${users.length})`, data: ['users_header'] },
         { title: `Orders (${orders.length})`, data: orders.map((o) => ({ type: 'order', item: o })) as any[] },
       ]}
       keyExtractor={(item, index) => (typeof item === 'string' ? item : item.item?.id ?? String(index))}
@@ -84,16 +94,27 @@ export default function AdminDashboardScreen() {
             </View>
           );
         }
-        if (item.type === 'user') {
-          const u = item.item as User;
+        if (item === 'revenue') {
           return (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{u.name}</Text>
-              <Text style={styles.cardSub}>{u.email}</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{u.role}</Text>
+            <View>
+              <View style={styles.revenueCard}>
+                <Text style={styles.revenueLabel}>Total Revenue</Text>
+                <Text style={styles.revenueAmount}>${(revenue?.totalRevenue ?? 0).toFixed(2)}</Text>
               </View>
+              {(revenue?.perRestaurant ?? []).map((r) => (
+                <View key={r.restaurantId} style={styles.revenueRow}>
+                  <Text style={styles.revenueRestName}>{r.restaurantName}</Text>
+                  <Text style={styles.revenueRestAmount}>${r.revenue.toFixed(2)} ({r.orderCount} orders)</Text>
+                </View>
+              ))}
             </View>
+          );
+        }
+        if (item === 'users_header') {
+          return (
+            <TouchableOpacity style={styles.manageBtn} onPress={() => navigation.navigate('AdminUsers')}>
+              <Text style={styles.manageBtnText}>👥 Manage Users</Text>
+            </TouchableOpacity>
           );
         }
         if (item.type === 'order') {
@@ -142,6 +163,34 @@ const styles = StyleSheet.create({
   },
   statCount: { fontSize: 24, fontWeight: 'bold', color: '#FF6B35' },
   statLabel: { fontSize: 12, color: '#666', textTransform: 'capitalize' },
+  revenueCard: {
+    backgroundColor: '#FF6B35',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  revenueLabel: { color: '#fff', fontSize: 13, opacity: 0.9 },
+  revenueAmount: { color: '#fff', fontSize: 28, fontWeight: 'bold', marginTop: 4 },
+  revenueRow: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  revenueRestName: { fontSize: 14, fontWeight: '600', color: '#222' },
+  revenueRestAmount: { fontSize: 13, color: '#666' },
+  manageBtn: {
+    backgroundColor: '#FF6B35',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  manageBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -156,14 +205,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 15, fontWeight: '700', color: '#222' },
   cardSub: { fontSize: 13, color: '#666', marginTop: 2 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFF3EE',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginTop: 6,
-  },
-  badgeText: { color: '#FF6B35', fontSize: 12, fontWeight: '600' },
   statusText: { fontSize: 13, color: '#888', textTransform: 'capitalize' },
 });
+

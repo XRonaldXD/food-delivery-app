@@ -18,7 +18,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'customer' | 'driver' | 'restaurant' | 'admin'>('customer');
+  const [role, setRole] = useState<'customer' | 'driver' | 'restaurant'>('customer');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -72,14 +72,14 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
 
         <Text style={styles.label}>I am a:</Text>
         <View style={styles.roleGrid}>
-          {(['customer', 'driver', 'restaurant', 'admin'] as const).map((r) => (
+          {(['customer', 'driver', 'restaurant'] as const).map((r) => (
             <TouchableOpacity
               key={r}
               style={[styles.roleBtn, role === r && styles.roleBtnActive]}
               onPress={() => setRole(r)}
             >
               <Text style={[styles.roleBtnText, role === r && styles.roleBtnTextActive]}>
-                {r === 'customer' ? '🧑 Customer' : r === 'driver' ? '🚗 Driver' : r === 'restaurant' ? '🍽️ Restaurant' : '🛡️ Admin'}
+                {r === 'customer' ? '🧑 Customer' : r === 'driver' ? '🚗 Driver' : '🍽️ Restaurant'}
               </Text>
             </TouchableOpacity>
           ))}

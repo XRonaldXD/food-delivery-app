@@ -5,6 +5,8 @@ import authRouter from './routes/auth';
 import restaurantsRouter from './routes/restaurants';
 import ordersRouter from './routes/orders';
 import adminRouter from './routes/admin';
+import chatRouter from './routes/chat';
+import locationsRouter from './routes/locations';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -37,6 +39,8 @@ app.use('/auth', authLimiter, authRouter);
 app.use('/restaurants', restaurantsRouter);
 app.use('/orders', ordersRouter);
 app.use('/admin', adminRouter);
+app.use('/chat', chatRouter);
+app.use('/locations', locationsRouter);
 
 app.listen(PORT, () => {
   console.log(`Food Delivery API running on port ${PORT}`);

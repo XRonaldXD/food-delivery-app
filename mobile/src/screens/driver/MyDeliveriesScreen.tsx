@@ -36,8 +36,15 @@ export default function MyDeliveriesScreen({ navigation }: { navigation: any }) 
   }, []);
 
   useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => { setRefreshing(true); load(); }} style={{ marginRight: 16 }}>
+          <Text style={{ fontSize: 22 }}>🔄</Text>
+        </TouchableOpacity>
+      ),
+    });
     load();
-  }, [load]);
+  }, [load, navigation]);
 
   if (loading) {
     return (

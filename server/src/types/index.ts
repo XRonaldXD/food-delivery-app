@@ -14,6 +14,7 @@ export interface User {
   passwordHash: string;
   role: Role;
   name: string;
+  phone?: string;
   /** For users with role 'restaurant', the id of the restaurant they own. */
   restaurantId?: string;
 }
@@ -61,4 +62,22 @@ export interface JwtPayload {
   userId: string;
   role: Role;
   restaurantId?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  orderId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: Role;
+  message: string;
+  createdAt: string;
+}
+
+export interface DriverLocation {
+  driverId: string;
+  orderId: string;
+  latitude: number;
+  longitude: number;
+  updatedAt: string;
 }
