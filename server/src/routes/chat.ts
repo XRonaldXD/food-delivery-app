@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { chatMessages, orders } from '../data/store';
+import { chatMessages, orders, users } from '../data/store';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -24,7 +24,6 @@ router.post('/:orderId', (req: AuthRequest, res: Response): void => {
   if (!message?.trim()) { res.status(400).json({ error: 'message is required' }); return; }
 
   const { userId, role } = req.user!;
-  const users = require('../data/store').users as import('../types').User[];
   const sender = users.find((u) => u.id === userId);
 
   const chatMsg = {

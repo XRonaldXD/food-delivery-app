@@ -38,8 +38,8 @@ export default function MyDeliveriesScreen({ navigation }: { navigation: any }) 
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => { setRefreshing(true); load(); }} style={{ marginRight: 16 }}>
-          <Text style={{ fontSize: 22 }}>🔄</Text>
+        <TouchableOpacity onPress={() => { setRefreshing(true); load(); }} style={styles.headerBtn}>
+          <Text style={styles.headerBtnText}>🔄</Text>
         </TouchableOpacity>
       ),
     });
@@ -117,4 +117,6 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
   address: { fontSize: 13, color: '#666', marginBottom: 6 },
   total: { fontSize: 14, fontWeight: '700', color: '#FF6B35' },
+  headerBtn: { marginRight: 16 },
+  headerBtnText: { fontSize: 22 },
 });

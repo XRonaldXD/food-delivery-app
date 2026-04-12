@@ -31,8 +31,8 @@ export default function AdminUsersScreen({ navigation }: { navigation: any }) {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => navigation.navigate('AdminUserEdit', { user: null })} style={{ marginRight: 16 }}>
-          <Text style={{ color: '#FF6B35', fontWeight: 'bold', fontSize: 28, lineHeight: 30 }}>+</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('AdminUserEdit', { user: null })} style={styles.headerBtn}>
+          <Text style={styles.headerBtnText}>+</Text>
         </TouchableOpacity>
       ),
     });
@@ -148,4 +148,6 @@ const styles = StyleSheet.create({
   deleteBtn: { marginTop: 10, alignSelf: 'flex-end' },
   deleteBtnText: { color: '#ef4444', fontSize: 13, fontWeight: '600' },
   empty: { textAlign: 'center', color: '#888', marginTop: 40 },
+  headerBtn: { marginRight: 16 },
+  headerBtnText: { color: '#FF6B35', fontWeight: 'bold', fontSize: 28, lineHeight: 30 },
 });

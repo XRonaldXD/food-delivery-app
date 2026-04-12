@@ -78,8 +78,14 @@ router.get('/revenue', authenticate, requireRole('restaurant'), (req: AuthReques
 
   const delivered = orders.filter((o) => {
     if (o.restaurantId !== restaurantId || o.status !== 'delivered') return false;
-    if (start && o.createdAt < start) return false;
-    if (end && o.createdAt > end + 'T23:59:59Z') return false;
+    if (start) {
+      const startMs = new Date(start).getTime();
+      if (!isNaN(startMs) && new Date(o.createdAt).getTime() < startMs) return false;
+    }
+    if (end) {
+      const endMs = new Date(end + 'T23:59:59Z').getTime();
+      if (!isNaN(endMs) && new Date(o.createdAt).getTime() > endMs) return false;
+    }
     return true;
   });
 
