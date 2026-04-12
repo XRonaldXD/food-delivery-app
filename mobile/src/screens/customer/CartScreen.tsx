@@ -34,7 +34,7 @@ export default function CartScreen({ navigation }: { navigation: any }) {
       });
       clearCart();
       Alert.alert('Order Placed!', `Your order #${order.id.slice(0, 8)} has been placed.`, [
-        { text: 'View Orders', onPress: () => navigation.navigate('Orders') },
+        { text: 'View Orders', onPress: () => navigation.navigate('OrdersTab', { screen: 'Orders' }) },
       ]);
     } catch (e: any) {
       Alert.alert('Error', e.message);
