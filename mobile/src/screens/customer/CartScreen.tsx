@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,43 @@ import {
   StyleSheet,
   Alert,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useCart } from '../../context/CartContext';
-import { orderApi } from '../../api/client';
+import { orderApi, addressApi } from '../../api/client';
+import { Address } from '../../types';
 
 export default function CartScreen({ navigation }: { navigation: any }) {
   const { restaurantId, restaurantName, items, removeItem, clearCart, total } = useCart();
   const [address, setAddress] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showAddressList, setShowAddressList] = useState(false);
+
+  const loadAddresses = useCallback(async () => {
+    try {
+      const data = await addressApi.list();
+      setSavedAddresses(data);
+    } catch {
+      // ignore – user may not have saved addresses
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAddresses();
+  }, [loadAddresses]);
+
+  const handleSelectAddress = (item: Address) => {
+    setSelectedAddressId(item.id);
+    setAddress(item.address);
+    setShowAddressList(false);
+  };
+
+  const handleAddressTextChange = useCallback((text: string) => {
+    setAddress(text);
+    setSelectedAddressId(null);
+  }, []);
 
   const handlePlaceOrder = async () => {
     if (!address.trim()) {
@@ -80,12 +109,47 @@ export default function CartScreen({ navigation }: { navigation: any }) {
           <View>
             <View style={styles.divider} />
             <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
+
+            <Text style={styles.sectionLabel}>Delivery Address</Text>
+
+            {savedAddresses.length > 0 && (
+              <TouchableOpacity
+                style={styles.savedAddrBtn}
+                onPress={() => setShowAddressList((v) => !v)}
+              >
+                <Text style={styles.savedAddrBtnText}>
+                  {selectedAddressId
+                    ? `📍 ${savedAddresses.find((a) => a.id === selectedAddressId)?.label ?? 'Saved Address'}`
+                    : '📍 Select Saved Address'}
+                </Text>
+                <Text style={styles.chevron}>{showAddressList ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
+            )}
+
+            {showAddressList && (
+              <View style={styles.addrList}>
+                {savedAddresses.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.addrItem,
+                      selectedAddressId === item.id && styles.addrItemSelected,
+                    ]}
+                    onPress={() => handleSelectAddress(item)}
+                  >
+                    <Text style={styles.addrItemLabel}>{item.label}</Text>
+                    <Text style={styles.addrItemAddress}>{item.address}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
             <TextInput
               style={styles.input}
-              placeholder="Delivery address"
+              placeholder={savedAddresses.length > 0 ? 'Or type a new address' : 'Delivery address'}
               placeholderTextColor="#999"
               value={address}
-              onChangeText={setAddress}
+              onChangeText={handleAddressTextChange}
               multiline
             />
             <TouchableOpacity
@@ -134,6 +198,36 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     minHeight: 60,
   },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: '#555', marginBottom: 8 },
+  savedAddrBtn: {
+    borderWidth: 1,
+    borderColor: '#FF6B35',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    backgroundColor: '#fff',
+  },
+  savedAddrBtnText: { color: '#FF6B35', fontWeight: '600', fontSize: 14, flex: 1 },
+  chevron: { color: '#FF6B35', fontSize: 12, marginLeft: 8 },
+  addrList: {
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  addrItem: {
+    padding: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  addrItemSelected: { backgroundColor: '#FFF3EE' },
+  addrItemLabel: { fontSize: 14, fontWeight: '600', color: '#222', marginBottom: 2 },
+  addrItemAddress: { fontSize: 12, color: '#777' },
   btn: {
     backgroundColor: '#FF6B35',
     borderRadius: 8,

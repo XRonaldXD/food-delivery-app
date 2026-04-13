@@ -8,7 +8,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Linking,
+  Platform,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { orderApi, locationApi } from '../../api/client';
 import { Order, OrderStatus } from '../../types';
 
@@ -24,7 +26,7 @@ const NEXT_STATUS: Record<string, { label: string; status: OrderStatus } | undef
   picked_up: { label: '✅ Mark Delivered', status: 'delivered' },
 };
 
-const LOCATION_SHARE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const LOCATION_SHARE_INTERVAL_MS = 30 * 1000; // share every 30 seconds
 
 export default function DeliveryDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
@@ -33,6 +35,7 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
   const [updating, setUpdating] = useState(false);
   const [sharingLocation, setSharingLocation] = useState(false);
   const [autoShareActive, setAutoShareActive] = useState(false);
+  const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -50,19 +53,47 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
     load();
   }, [load]);
 
+  // Request location permission on mount
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+      if (status !== 'granted') {
+        Alert.alert(
+          'Location Permission',
+          'Location access is required to share your position with customers.',
+        );
+      }
+    })();
+  }, []);
+
   const shareLocationOnce = useCallback(async (silent = false) => {
     try {
-      // Mock coordinates (San Francisco) – replace with real GPS in production
-      await locationApi.updateDriverLocation({ orderId, latitude: 37.7749, longitude: -122.4194 });
+      let latitude: number;
+      let longitude: number;
+
+      if (locationPermission) {
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        latitude = pos.coords.latitude;
+        longitude = pos.coords.longitude;
+      } else {
+        // Fallback to mock coordinates when permission not granted
+        latitude = 37.7749;
+        longitude = -122.4194;
+      }
+
+      await locationApi.updateDriverLocation({ orderId, latitude, longitude });
       if (!silent) {
         Alert.alert('Location Shared', 'Your location has been shared with the customer.');
       }
     } catch (e: any) {
       if (!silent) Alert.alert('Error', e.message);
     }
-  }, [orderId]);
+  }, [orderId, locationPermission]);
 
-  // Auto-share location every 5 minutes when order is picked_up
+  // Auto-share location every 30 seconds when order is picked_up
   useEffect(() => {
     if (order?.status === 'picked_up') {
       setAutoShareActive(true);
@@ -135,7 +166,15 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
 
       {autoShareActive && (
         <View style={styles.autoShareBadge}>
-          <Text style={styles.autoShareText}>📡 Auto-sharing location every 5 min</Text>
+          <Text style={styles.autoShareText}>📡 Auto-sharing location every 30 sec</Text>
+        </View>
+      )}
+
+      {locationPermission === false && (
+        <View style={styles.permissionWarning}>
+          <Text style={styles.permissionWarningText}>
+            ⚠️ Location permission denied – sharing mock coordinates. Enable location in device settings for accurate tracking.
+          </Text>
         </View>
       )}
 
@@ -209,6 +248,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   autoShareText: { color: '#065f46', fontSize: 12, fontWeight: '600' },
+  permissionWarning: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  permissionWarningText: { color: '#92400e', fontSize: 12 },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   actionSmallBtn: {
     borderWidth: 1,

@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { users, orders, restaurants } from '../data/store';
+import { users, orders, restaurants, driverLocations } from '../data/store';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { Role } from '../types';
 
@@ -78,6 +78,11 @@ router.get('/orders', (_req: AuthRequest, res: Response): void => {
 // GET /admin/restaurants
 router.get('/restaurants', (_req: AuthRequest, res: Response): void => {
   res.json(restaurants);
+});
+
+// GET /admin/locations – all driver locations
+router.get('/locations', (_req: AuthRequest, res: Response): void => {
+  res.json(driverLocations);
 });
 
 // GET /admin/revenue
