@@ -19,6 +19,8 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'customer' | 'driver' | 'restaurant'>('customer');
+  const [restaurantId, setRestaurantId] = useState('');
+  const [restaurantPassword, setRestaurantPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -26,9 +28,24 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
+    if (role === 'restaurant' && !restaurantId) {
+      Alert.alert('Error', 'Please enter the Restaurant ID');
+      return;
+    }
+    if (role === 'restaurant' && !restaurantPassword) {
+      Alert.alert('Error', 'Please enter the Restaurant Password');
+      return;
+    }
     setLoading(true);
     try {
-      await register(email.trim(), password, role, name.trim() || undefined);
+      await register(
+        email.trim(),
+        password,
+        role,
+        name.trim() || undefined,
+        role === 'restaurant' ? restaurantId.trim() : undefined,
+        role === 'restaurant' ? restaurantPassword : undefined,
+      );
     } catch (e: any) {
       Alert.alert('Registration Failed', e.message);
     } finally {
@@ -84,6 +101,29 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {role === 'restaurant' && (
+          <>
+            <Text style={styles.label}>Restaurant ID *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter the Restaurant ID (e.g. rest-1)"
+              placeholderTextColor="#999"
+              value={restaurantId}
+              onChangeText={setRestaurantId}
+              autoCapitalize="none"
+            />
+            <Text style={styles.label}>Restaurant Password *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter the Restaurant Password"
+              placeholderTextColor="#999"
+              value={restaurantPassword}
+              onChangeText={setRestaurantPassword}
+              secureTextEntry
+            />
+          </>
+        )}
 
         <TouchableOpacity style={styles.btn} onPress={handleRegister} disabled={loading}>
           {loading ? (

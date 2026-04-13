@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   cancelled: '#ef4444',
 };
 
-export default function RestaurantOrdersScreen() {
+export default function RestaurantOrdersScreen({ navigation }: { navigation: any }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,6 +41,16 @@ export default function RestaurantOrdersScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.getParent()?.addListener('tabPress', () => {
+      if (navigation.isFocused()) {
+        setRefreshing(true);
+        load();
+      }
+    });
+    return () => unsubscribe?.();
+  }, [navigation, load]);
 
   const handleUpdateStatus = async (order: Order, status: OrderStatus) => {
     try {

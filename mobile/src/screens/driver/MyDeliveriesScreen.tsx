@@ -36,15 +36,18 @@ export default function MyDeliveriesScreen({ navigation }: { navigation: any }) 
   }, []);
 
   useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={() => { setRefreshing(true); load(); }} style={styles.headerBtn}>
-          <Text style={styles.headerBtnText}>🔄</Text>
-        </TouchableOpacity>
-      ),
-    });
     load();
-  }, [load, navigation]);
+  }, [load]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.getParent()?.addListener('tabPress', () => {
+      if (navigation.isFocused()) {
+        setRefreshing(true);
+        load();
+      }
+    });
+    return () => unsubscribe?.();
+  }, [navigation, load]);
 
   if (loading) {
     return (
@@ -117,6 +120,4 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
   address: { fontSize: 13, color: '#666', marginBottom: 6 },
   total: { fontSize: 14, fontWeight: '700', color: '#FF6B35' },
-  headerBtn: { marginRight: 16 },
-  headerBtnText: { fontSize: 22 },
 });

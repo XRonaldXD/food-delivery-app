@@ -7,8 +7,9 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  Linking,
 } from 'react-native';
-import { orderApi } from '../../api/client';
+import { orderApi, locationApi } from '../../api/client';
 import { Order } from '../../types';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -29,7 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '❌ Cancelled',
 };
 
-export default function OrderDetailScreen({ route }: { route: any }) {
+export default function OrderDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,6 +67,29 @@ export default function OrderDetailScreen({ route }: { route: any }) {
         },
       },
     ]);
+  };
+
+  const handleViewDriverLocation = async () => {
+    try {
+      const loc = await locationApi.getOrderLocation(orderId);
+      Alert.alert(
+        '📍 Driver Location',
+        `Latitude: ${loc.latitude.toFixed(5)}\nLongitude: ${loc.longitude.toFixed(5)}\nUpdated: ${new Date(loc.updatedAt).toLocaleTimeString()}`,
+        [
+          {
+            text: 'Open in Maps',
+            onPress: () => Linking.openURL(`https://maps.google.com/?q=${loc.latitude},${loc.longitude}`),
+          },
+          { text: 'OK', style: 'cancel' },
+        ],
+      );
+    } catch {
+      Alert.alert('Location Unavailable', 'Driver has not shared their location yet.');
+    }
+  };
+
+  const handleOpenChat = () => {
+    navigation.navigate('Chat', { orderId });
   };
 
   if (loading) {
@@ -105,6 +129,17 @@ export default function OrderDetailScreen({ route }: { route: any }) {
       <Text style={styles.meta}>Order #{order.id.slice(0, 8)}</Text>
       <Text style={styles.meta}>Placed: {new Date(order.createdAt).toLocaleString()}</Text>
 
+      {order.status === 'picked_up' && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.locationBtn} onPress={handleViewDriverLocation}>
+            <Text style={styles.locationBtnText}>📍 View Driver Location</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.chatBtn} onPress={handleOpenChat}>
+            <Text style={styles.chatBtnText}>💬 Chat with Driver</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {['placed', 'accepted'].includes(order.status) && (
         <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
           <Text style={styles.cancelBtnText}>Cancel Order</Text>
@@ -130,6 +165,23 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 15, fontWeight: '700', color: '#FF6B35' },
   address: { fontSize: 14, color: '#555', lineHeight: 20 },
   meta: { fontSize: 12, color: '#aaa', marginTop: 8 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20 },
+  locationBtn: {
+    flex: 1,
+    backgroundColor: '#8b5cf6',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  locationBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
+  chatBtn: {
+    flex: 1,
+    backgroundColor: '#3b82f6',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  chatBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
   cancelBtn: {
     marginTop: 24,
     backgroundColor: '#ef4444',
