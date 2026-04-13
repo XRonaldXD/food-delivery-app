@@ -17,6 +17,10 @@ router.post('/driver', requireRole('driver'), (req: AuthRequest, res: Response):
   const order = orders.find((o) => o.id === orderId);
   if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
 
+  if (order.status === 'delivered' || order.status === 'cancelled') {
+    res.status(409).json({ error: 'Cannot update location for a delivered or cancelled order' }); return;
+  }
+
   const existing = driverLocations.find((l) => l.orderId === orderId);
   if (existing) {
     existing.latitude = latitude;

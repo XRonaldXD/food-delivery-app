@@ -71,8 +71,19 @@ router.delete('/users/:id', (req: AuthRequest, res: Response): void => {
 });
 
 // GET /admin/orders
-router.get('/orders', (_req: AuthRequest, res: Response): void => {
-  res.json(orders);
+router.get('/orders', (req: AuthRequest, res: Response): void => {
+  const { search } = req.query as { search?: string };
+  let list = orders;
+  if (search) {
+    const q = search.toLowerCase();
+    list = orders.filter((o) =>
+      o.id.toLowerCase().includes(q) ||
+      o.restaurantName.toLowerCase().includes(q) ||
+      o.deliveryAddress.toLowerCase().includes(q) ||
+      o.status.toLowerCase().includes(q)
+    );
+  }
+  res.json(list);
 });
 
 // GET /admin/restaurants

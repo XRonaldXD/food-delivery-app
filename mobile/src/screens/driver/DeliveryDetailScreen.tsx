@@ -178,26 +178,28 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
         </View>
       )}
 
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.actionSmallBtn} onPress={handleOpenMap}>
-          <Text style={styles.actionSmallBtnText}>📍 Open Map</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionSmallBtn, { backgroundColor: '#8b5cf6' }]}
-          onPress={() => navigation.navigate('Chat', { orderId: order.id })}
-        >
-          <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>💬 Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionSmallBtn, { backgroundColor: '#10b981' }]}
-          onPress={handleShareLocation}
-          disabled={sharingLocation}
-        >
-          <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>
-            {sharingLocation ? '⏳' : '📡 Share Now'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {order.status !== 'delivered' && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.actionSmallBtn} onPress={handleOpenMap}>
+            <Text style={styles.actionSmallBtnText}>📍 Open Map</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionSmallBtn, { backgroundColor: '#8b5cf6' }]}
+            onPress={() => navigation.navigate('Chat', { orderId: order.id })}
+          >
+            <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>💬 Chat</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionSmallBtn, { backgroundColor: '#10b981' }]}
+            onPress={handleShareLocation}
+            disabled={sharingLocation}
+          >
+            <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>
+              {sharingLocation ? '⏳' : '📡 Share Now'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Text style={styles.sectionTitle}>Items</Text>
       {order.items.map((item) => (

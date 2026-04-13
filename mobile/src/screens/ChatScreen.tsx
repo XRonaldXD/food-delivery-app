@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { ChatMessage } from '../types';
 
 export default function ChatScreen({ route }: { route: any }) {
-  const { orderId } = route.params as { orderId: string };
+  const { orderId, readOnly } = route.params as { orderId: string; readOnly?: boolean };
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,24 +90,30 @@ export default function ChatScreen({ route }: { route: any }) {
           );
         }}
       />
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          value={text}
-          onChangeText={setText}
-          placeholder="Type a message…"
-          placeholderTextColor="#999"
-          multiline
-          maxLength={500}
-        />
-        <TouchableOpacity
-          style={[styles.sendBtn, (!text.trim() || sending) && styles.sendBtnDisabled]}
-          onPress={handleSend}
-          disabled={!text.trim() || sending}
-        >
-          <Text style={styles.sendBtnText}>{sending ? '⏳' : '➤'}</Text>
-        </TouchableOpacity>
-      </View>
+      {readOnly ? (
+        <View style={styles.readOnlyBanner}>
+          <Text style={styles.readOnlyText}>🔒 Chat is read-only after delivery</Text>
+        </View>
+      ) : (
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            value={text}
+            onChangeText={setText}
+            placeholder="Type a message…"
+            placeholderTextColor="#999"
+            multiline
+            maxLength={500}
+          />
+          <TouchableOpacity
+            style={[styles.sendBtn, (!text.trim() || sending) && styles.sendBtnDisabled]}
+            onPress={handleSend}
+            disabled={!text.trim() || sending}
+          >
+            <Text style={styles.sendBtnText}>{sending ? '⏳' : '➤'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -159,4 +165,12 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: { backgroundColor: '#ccc' },
   sendBtnText: { color: '#fff', fontSize: 18 },
+  readOnlyBanner: {
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+  },
+  readOnlyText: { color: '#666', fontSize: 13, fontWeight: '600' },
 });

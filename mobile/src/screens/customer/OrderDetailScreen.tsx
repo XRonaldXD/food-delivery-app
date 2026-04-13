@@ -12,6 +12,7 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import { orderApi, locationApi } from '../../api/client';
 import { Order, DriverLocation } from '../../types';
+import { CHAT_RETENTION_MS } from '../../constants';
 
 const STATUS_COLOR: Record<string, string> = {
   placed: '#f59e0b',
@@ -111,6 +112,10 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
     navigation.navigate('Chat', { orderId });
   };
 
+  const isChatAvailableAfterDelivery =
+    order?.status === 'delivered' &&
+    Date.now() - new Date(order?.updatedAt ?? 0).getTime() <= CHAT_RETENTION_MS;
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -196,6 +201,15 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
           <Text style={styles.cancelBtnText}>Cancel Order</Text>
         </TouchableOpacity>
       )}
+
+      {isChatAvailableAfterDelivery && (
+        <TouchableOpacity
+          style={styles.chatHistoryBtn}
+          onPress={() => navigation.navigate('Chat', { orderId, readOnly: true })}
+        >
+          <Text style={styles.chatHistoryBtnText}>💬 View Chat History</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -253,4 +267,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  chatHistoryBtn: {
+    marginTop: 16,
+    backgroundColor: '#3b82f6',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+  },
+  chatHistoryBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
 });
