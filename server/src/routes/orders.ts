@@ -70,6 +70,35 @@ router.get('/available', requireRole('driver'), (_req: AuthRequest, res: Respons
   res.json(available);
 });
 
+// GET /orders/driver/earnings  (driver)
+router.get('/driver/earnings', requireRole('driver'), (req: AuthRequest, res: Response): void => {
+  const { userId } = req.user!;
+  const myDeliveries = orders.filter((o) => o.driverId === userId && o.status === 'delivered');
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const todayDeliveries = myDeliveries.filter((o) => o.updatedAt >= todayStart);
+  const monthDeliveries = myDeliveries.filter((o) => o.updatedAt >= monthStart);
+
+  // Driver earns 10% of delivery total as commission
+  const COMMISSION = 0.1;
+  const todayEarnings = todayDeliveries.reduce((sum, o) => sum + o.total * COMMISSION, 0);
+  const monthlyEarnings = monthDeliveries.reduce((sum, o) => sum + o.total * COMMISSION, 0);
+  const totalEarnings = myDeliveries.reduce((sum, o) => sum + o.total * COMMISSION, 0);
+
+  res.json({
+    todayEarnings,
+    monthlyEarnings,
+    totalEarnings,
+    todayDeliveries: todayDeliveries.length,
+    monthlyDeliveries: monthDeliveries.length,
+    totalDeliveries: myDeliveries.length,
+    recentDeliveries: myDeliveries.slice(-10).reverse(),
+  });
+});
+
 // GET /orders/mine
 router.get('/mine', (req: AuthRequest, res: Response): void => {
   const { userId, role, restaurantId } = req.user!;

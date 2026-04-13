@@ -21,12 +21,14 @@ import MenuScreen from './screens/customer/MenuScreen';
 import CartScreen from './screens/customer/CartScreen';
 import OrdersScreen from './screens/customer/OrdersScreen';
 import OrderDetailScreen from './screens/customer/OrderDetailScreen';
+import AddressesScreen from './screens/customer/AddressesScreen';
 
 // Driver screens
 import AvailableOrdersScreen from './screens/driver/AvailableOrdersScreen';
 import MyDeliveriesScreen from './screens/driver/MyDeliveriesScreen';
 import DeliveryDetailScreen from './screens/driver/DeliveryDetailScreen';
 import DriverChatListScreen from './screens/driver/DriverChatListScreen';
+import DriverDashboardScreen from './screens/driver/DriverDashboardScreen';
 
 // Restaurant screens
 import RestaurantOrdersScreen from './screens/restaurant/RestaurantOrdersScreen';
@@ -103,6 +105,11 @@ function CustomerTabs() {
         options={{ title: 'Orders', tabBarLabel: 'Orders', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text> }}
       />
       <Tab.Screen
+        name="AddressesTab"
+        component={AddressesScreen}
+        options={{ title: 'Addresses', tabBarLabel: 'Addresses', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📍</Text> }}
+      />
+      <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
         options={{ title: 'Profile', tabBarLabel: 'Profile', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>👤</Text> }}
@@ -162,6 +169,11 @@ function DriverTabs() {
         name="DeliveriesTab"
         component={DriverDeliveriesStack}
         options={{ title: 'Deliveries', tabBarLabel: 'My Deliveries', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🚗</Text> }}
+      />
+      <Tab.Screen
+        name="DashboardTab"
+        component={DriverDashboardScreen}
+        options={{ title: 'Earnings', tabBarLabel: 'Earnings', headerShown: true, tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💰</Text> }}
       />
       <Tab.Screen
         name="ChatTab"

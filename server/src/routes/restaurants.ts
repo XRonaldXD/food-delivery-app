@@ -7,14 +7,22 @@ import { MenuItem } from '../types';
 const router = Router();
 
 // GET /restaurants
-router.get('/', authenticate, (_req: AuthRequest, res: Response): void => {
-  const list = restaurants.map(({ id, name, description, cuisine, imageUrl }) => ({
+router.get('/', authenticate, (req: AuthRequest, res: Response): void => {
+  const { search, cuisine } = req.query as { search?: string; cuisine?: string };
+  let list = restaurants.map(({ id, name, description, cuisine: c, imageUrl }) => ({
     id,
     name,
     description,
-    cuisine,
+    cuisine: c,
     imageUrl,
   }));
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter((r) => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));
+  }
+  if (cuisine) {
+    list = list.filter((r) => r.cuisine.toLowerCase() === cuisine.toLowerCase());
+  }
   res.json(list);
 });
 

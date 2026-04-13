@@ -7,6 +7,7 @@ import ordersRouter from './routes/orders';
 import adminRouter from './routes/admin';
 import chatRouter from './routes/chat';
 import locationsRouter from './routes/locations';
+import addressesRouter from './routes/addresses';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -41,6 +42,7 @@ app.use('/orders', ordersRouter);
 app.use('/admin', adminRouter);
 app.use('/chat', chatRouter);
 app.use('/locations', locationsRouter);
+app.use('/addresses', addressesRouter);
 
 app.listen(PORT, () => {
   console.log(`Food Delivery API running on port ${PORT}`);

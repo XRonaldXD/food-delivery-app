@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,12 +24,16 @@ const NEXT_STATUS: Record<string, { label: string; status: OrderStatus } | undef
   picked_up: { label: '✅ Mark Delivered', status: 'delivered' },
 };
 
+const LOCATION_SHARE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function DeliveryDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [sharingLocation, setSharingLocation] = useState(false);
+  const [autoShareActive, setAutoShareActive] = useState(false);
+  const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -46,6 +50,39 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
     load();
   }, [load]);
 
+  const shareLocationOnce = useCallback(async (silent = false) => {
+    try {
+      // Mock coordinates (San Francisco) – replace with real GPS in production
+      await locationApi.updateDriverLocation({ orderId, latitude: 37.7749, longitude: -122.4194 });
+      if (!silent) {
+        Alert.alert('Location Shared', 'Your location has been shared with the customer.');
+      }
+    } catch (e: any) {
+      if (!silent) Alert.alert('Error', e.message);
+    }
+  }, [orderId]);
+
+  // Auto-share location every 5 minutes when order is picked_up
+  useEffect(() => {
+    if (order?.status === 'picked_up') {
+      setAutoShareActive(true);
+      shareLocationOnce(true);
+      locationIntervalRef.current = setInterval(() => shareLocationOnce(true), LOCATION_SHARE_INTERVAL_MS);
+    } else {
+      setAutoShareActive(false);
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+    };
+  }, [order?.status, shareLocationOnce]);
+
   const handleUpdateStatus = async (nextStatus: OrderStatus) => {
     setUpdating(true);
     try {
@@ -61,11 +98,7 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
   const handleShareLocation = async () => {
     setSharingLocation(true);
     try {
-      // Mock coordinates (San Francisco)
-      await locationApi.updateDriverLocation({ orderId, latitude: 37.7749, longitude: -122.4194 });
-      Alert.alert('Location Shared', 'Your location has been shared with the customer.');
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
+      await shareLocationOnce(false);
     } finally {
       setSharingLocation(false);
     }
@@ -100,6 +133,12 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
       <Text style={styles.sectionTitle}>Delivery Address</Text>
       <Text style={styles.address}>📍 {order.deliveryAddress}</Text>
 
+      {autoShareActive && (
+        <View style={styles.autoShareBadge}>
+          <Text style={styles.autoShareText}>📡 Auto-sharing location every 5 min</Text>
+        </View>
+      )}
+
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.actionSmallBtn} onPress={handleOpenMap}>
           <Text style={styles.actionSmallBtnText}>📍 Open Map</Text>
@@ -116,7 +155,7 @@ export default function DeliveryDetailScreen({ route, navigation }: { route: any
           disabled={sharingLocation}
         >
           <Text style={[styles.actionSmallBtnText, { color: '#fff' }]}>
-            {sharingLocation ? '⏳' : '📡 Share Location'}
+            {sharingLocation ? '⏳' : '📡 Share Now'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -161,6 +200,15 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#444', marginBottom: 10, marginTop: 16 },
   address: { fontSize: 14, color: '#555', lineHeight: 20 },
+  autoShareBadge: {
+    backgroundColor: '#d1fae5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  autoShareText: { color: '#065f46', fontSize: 12, fontWeight: '600' },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   actionSmallBtn: {
     borderWidth: 1,
