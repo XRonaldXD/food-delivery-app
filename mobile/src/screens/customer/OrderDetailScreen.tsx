@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { orderApi, locationApi } from '../../api/client';
-import { Order } from '../../types';
+import { Order, DriverLocation } from '../../types';
 
 const STATUS_COLOR: Record<string, string> = {
   placed: '#f59e0b',
@@ -30,10 +31,16 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '❌ Cancelled',
 };
 
+const LOCATION_POLL_INTERVAL_MS = 15000; // 15 000 ms (15 seconds)
+
 export default function OrderDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationUnavailable, setLocationUnavailable] = useState(false);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -46,9 +53,45 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
     }
   }, [orderId]);
 
+  const fetchDriverLocation = useCallback(async () => {
+    try {
+      const loc = await locationApi.getOrderLocation(orderId);
+      setDriverLocation(loc);
+      setLocationUnavailable(false);
+    } catch {
+      setLocationUnavailable(true);
+    }
+  }, [orderId]);
+
+  const fetchDriverLocationRef = useRef(fetchDriverLocation);
+  useEffect(() => {
+    fetchDriverLocationRef.current = fetchDriverLocation;
+  }, [fetchDriverLocation]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (order?.status !== 'picked_up') {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      setDriverLocation(null);
+      setLocationUnavailable(false);
+      return;
+    }
+    setLocationLoading(true);
+    fetchDriverLocationRef.current().finally(() => setLocationLoading(false));
+    pollIntervalRef.current = setInterval(() => fetchDriverLocationRef.current(), LOCATION_POLL_INTERVAL_MS);
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [order?.status]);
 
   const handleCancel = async () => {
     if (!order) return;
@@ -69,23 +112,9 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
     ]);
   };
 
-  const handleViewDriverLocation = async () => {
-    try {
-      const loc = await locationApi.getOrderLocation(orderId);
-      Alert.alert(
-        '📍 Driver Location',
-        `Latitude: ${loc.latitude.toFixed(5)}\nLongitude: ${loc.longitude.toFixed(5)}\nUpdated: ${new Date(loc.updatedAt).toLocaleTimeString()}`,
-        [
-          {
-            text: 'Open in Maps',
-            onPress: () => Linking.openURL(`https://maps.google.com/?q=${loc.latitude},${loc.longitude}`),
-          },
-          { text: 'OK', style: 'cancel' },
-        ],
-      );
-    } catch {
-      Alert.alert('Location Unavailable', 'Driver has not shared their location yet.');
-    }
+  const handleOpenInMaps = () => {
+    if (!driverLocation) return;
+    Linking.openURL(`https://maps.google.com/?q=${driverLocation.latitude},${driverLocation.longitude}`);
   };
 
   const handleOpenChat = () => {
@@ -130,14 +159,52 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
       <Text style={styles.meta}>Placed: {new Date(order.createdAt).toLocaleString()}</Text>
 
       {order.status === 'picked_up' && (
-        <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.locationBtn} onPress={handleViewDriverLocation}>
-            <Text style={styles.locationBtnText}>📍 View Driver Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.chatBtn} onPress={handleOpenChat}>
-            <Text style={styles.chatBtnText}>💬 Chat with Driver</Text>
-          </TouchableOpacity>
-        </View>
+        <>
+          <Text style={styles.sectionTitle}>📍 Driver Location</Text>
+          {locationLoading ? (
+            <View style={styles.mapPlaceholder}>
+              <ActivityIndicator size="large" color="#8b5cf6" />
+              <Text style={styles.mapPlaceholderText}>Loading driver location...</Text>
+            </View>
+          ) : locationUnavailable || !driverLocation ? (
+            <View style={styles.mapPlaceholder}>
+              <Text style={styles.mapPlaceholderText}>Driver location not available yet.</Text>
+            </View>
+          ) : (
+            <>
+              <MapView
+                style={styles.map}
+                region={{
+                  latitude: driverLocation.latitude,
+                  longitude: driverLocation.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+              >
+                <Marker
+                  coordinate={{ latitude: driverLocation.latitude, longitude: driverLocation.longitude }}
+                  title="Driver"
+                  description={`Updated: ${new Date(driverLocation.updatedAt).toLocaleTimeString()}`}
+                />
+              </MapView>
+              <Text style={styles.locationMeta}>
+                Last updated: {new Date(driverLocation.updatedAt).toLocaleTimeString()}
+              </Text>
+              <TouchableOpacity style={styles.openMapsBtn} onPress={handleOpenInMaps}>
+                <Text style={styles.openMapsBtnText}>🗺️ Open in Google Maps</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.chatBtn} onPress={handleOpenChat}>
+              <Text style={styles.chatBtnText}>💬 Chat with Driver</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
 
       {['placed', 'accepted'].includes(order.status) && (
@@ -165,15 +232,27 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 15, fontWeight: '700', color: '#FF6B35' },
   address: { fontSize: 14, color: '#555', lineHeight: 20 },
   meta: { fontSize: 12, color: '#aaa', marginTop: 8 },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20 },
-  locationBtn: {
-    flex: 1,
-    backgroundColor: '#8b5cf6',
-    borderRadius: 8,
-    padding: 12,
+  map: { width: '100%', height: 220, borderRadius: 12, overflow: 'hidden', marginBottom: 6 },
+  mapPlaceholder: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: '#f0eeff',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  locationBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
+  mapPlaceholderText: { color: '#8b5cf6', fontSize: 14, marginTop: 8, textAlign: 'center' },
+  locationMeta: { fontSize: 11, color: '#aaa', marginBottom: 8, textAlign: 'right' },
+  openMapsBtn: {
+    backgroundColor: '#f0eeff',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  openMapsBtnText: { color: '#8b5cf6', fontWeight: '600', fontSize: 13 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
   chatBtn: {
     flex: 1,
     backgroundColor: '#3b82f6',
