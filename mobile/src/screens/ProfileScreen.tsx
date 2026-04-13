@@ -23,6 +23,12 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Restaurant ID change
+  const [changingRestaurant, setChangingRestaurant] = useState(false);
+  const [newRestaurantId, setNewRestaurantId] = useState('');
+  const [restaurantPassword, setRestaurantPassword] = useState('');
+  const [savingRestaurant, setSavingRestaurant] = useState(false);
+
   const handleLogout = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -62,6 +68,28 @@ export default function ProfileScreen() {
     setEditing(false);
   };
 
+  const handleChangeRestaurant = async () => {
+    if (!newRestaurantId.trim()) {
+      Alert.alert('Error', 'Restaurant ID is required');
+      return;
+    }
+    setSavingRestaurant(true);
+    try {
+      await updateProfile({
+        newRestaurantId: newRestaurantId.trim(),
+        restaurantPassword: restaurantPassword,
+      });
+      setNewRestaurantId('');
+      setRestaurantPassword('');
+      setChangingRestaurant(false);
+      Alert.alert('Success', 'Restaurant updated successfully');
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setSavingRestaurant(false);
+    }
+  };
+
   if (editing) {
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -87,6 +115,43 @@ export default function ProfileScreen() {
     );
   }
 
+  if (changingRestaurant) {
+    return (
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.editContainer}>
+          <Text style={styles.editTitle}>Change Restaurant</Text>
+          <Text style={styles.changeRestDesc}>
+            You can link your account to a different restaurant. You will need the restaurant ID and its password.
+          </Text>
+          <Text style={styles.label}>New Restaurant ID</Text>
+          <TextInput
+            style={styles.input}
+            value={newRestaurantId}
+            onChangeText={setNewRestaurantId}
+            placeholder="e.g. rest-2"
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+          />
+          <Text style={styles.label}>Restaurant Password</Text>
+          <TextInput
+            style={styles.input}
+            value={restaurantPassword}
+            onChangeText={setRestaurantPassword}
+            placeholder="Restaurant password"
+            placeholderTextColor="#999"
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.saveBtn} onPress={handleChangeRestaurant} disabled={savingRestaurant}>
+            {savingRestaurant ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Change Restaurant</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => setChangingRestaurant(false)}>
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.avatarCircle}>
@@ -105,10 +170,19 @@ export default function ProfileScreen() {
             : '🧑 Customer'}
         </Text>
       </View>
+      {user?.role === 'restaurant' && user.restaurantId ? (
+        <Text style={styles.restaurantId}>Restaurant: {user.restaurantId}</Text>
+      ) : null}
 
       <TouchableOpacity style={styles.editBtn} onPress={() => setEditing(true)}>
         <Text style={styles.editBtnText}>✏️ Edit Profile</Text>
       </TouchableOpacity>
+
+      {user?.role === 'restaurant' && (
+        <TouchableOpacity style={styles.changeRestBtn} onPress={() => setChangingRestaurant(true)}>
+          <Text style={styles.changeRestBtnText}>🍽️ Change Restaurant</Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Text style={styles.logoutBtnText}>Log Out</Text>
@@ -166,19 +240,30 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    marginBottom: 28,
+    marginBottom: 8,
     marginTop: 8,
   },
   roleText: { color: '#FF6B35', fontWeight: '600', fontSize: 14 },
+  restaurantId: { fontSize: 12, color: '#aaa', marginBottom: 20 },
   editBtn: {
     borderWidth: 2,
     borderColor: '#FF6B35',
     borderRadius: 8,
     paddingHorizontal: 40,
     paddingVertical: 12,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   editBtnText: { color: '#FF6B35', fontWeight: 'bold', fontSize: 15 },
+  changeRestBtn: {
+    borderWidth: 2,
+    borderColor: '#8b5cf6',
+    borderRadius: 8,
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  changeRestBtnText: { color: '#8b5cf6', fontWeight: 'bold', fontSize: 15 },
+  changeRestDesc: { fontSize: 14, color: '#666', marginBottom: 20, lineHeight: 20 },
   logoutBtn: {
     borderWidth: 2,
     borderColor: '#ef4444',

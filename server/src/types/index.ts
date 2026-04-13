@@ -83,3 +83,11 @@ export interface DriverLocation {
   longitude: number;
   updatedAt: string;
 }
+
+export interface Address {
+  id: string;
+  customerId: string;
+  label: string;
+  address: string;
+  createdAt: string;
+}

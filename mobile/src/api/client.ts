@@ -63,6 +63,8 @@ export const userApi = {
     email?: string;
     currentPassword?: string;
     newPassword?: string;
+    newRestaurantId?: string;
+    restaurantPassword?: string;
   }) =>
     request<import('../types').User>('/auth/profile', {
       method: 'PUT',
@@ -72,7 +74,13 @@ export const userApi = {
 
 // Restaurants
 export const restaurantApi = {
-  list: () => request<import('../types').RestaurantSummary[]>('/restaurants'),
+  list: (params?: { search?: string; cuisine?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.cuisine) qs.set('cuisine', params.cuisine);
+    const query = qs.toString();
+    return request<import('../types').RestaurantSummary[]>(`/restaurants${query ? `?${query}` : ''}`);
+  },
   menu: (id: string) => request<import('../types').Restaurant>(`/restaurants/${id}/menu`),
   getSettings: () => request<{ autoAccept: boolean }>('/restaurants/settings'),
   updateSettings: (body: { autoAccept: boolean }) =>
@@ -176,4 +184,35 @@ export const locationApi = {
     }),
   getOrderLocation: (orderId: string) =>
     request<import('../types').DriverLocation>(`/locations/order/${orderId}`),
+};
+
+// Driver
+export const driverApi = {
+  earnings: () =>
+    request<{
+      todayEarnings: number;
+      monthlyEarnings: number;
+      totalEarnings: number;
+      todayDeliveries: number;
+      monthlyDeliveries: number;
+      totalDeliveries: number;
+      recentDeliveries: import('../types').Order[];
+    }>('/orders/driver/earnings'),
+};
+
+// Addresses
+export const addressApi = {
+  list: () => request<import('../types').Address[]>('/addresses'),
+  add: (body: { label: string; address: string }) =>
+    request<import('../types').Address>('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  update: (id: string, body: { label?: string; address?: string }) =>
+    request<import('../types').Address>(`/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  remove: (id: string) =>
+    request<{ success: boolean }>(`/addresses/${id}`, { method: 'DELETE' }),
 };

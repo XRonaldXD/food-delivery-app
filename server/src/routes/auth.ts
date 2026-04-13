@@ -115,12 +115,14 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response): Pr
     return;
   }
 
-  const { name, phone, email, currentPassword, newPassword } = req.body as {
+  const { name, phone, email, currentPassword, newPassword, newRestaurantId, restaurantPassword } = req.body as {
     name?: string;
     phone?: string;
     email?: string;
     currentPassword?: string;
     newPassword?: string;
+    newRestaurantId?: string;
+    restaurantPassword?: string;
   };
 
   if (email && email !== user.email) {
@@ -144,6 +146,25 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response): Pr
       return;
     }
     user.passwordHash = await bcrypt.hash(newPassword, 10);
+  }
+
+  // Restaurant users can change their associated restaurant
+  if (newRestaurantId !== undefined && user.role === 'restaurant') {
+    const restaurant = restaurants.find((r) => r.id === newRestaurantId);
+    if (!restaurant) {
+      res.status(404).json({ error: 'Restaurant not found' });
+      return;
+    }
+    if (restaurant.restaurantPassword && restaurant.restaurantPassword !== restaurantPassword) {
+      res.status(401).json({ error: 'Invalid restaurant password' });
+      return;
+    }
+    const existingOwner = users.find((u) => u.restaurantId === newRestaurantId && u.role === 'restaurant' && u.id !== userId);
+    if (existingOwner) {
+      res.status(409).json({ error: 'This restaurant already has an owner account' });
+      return;
+    }
+    user.restaurantId = newRestaurantId;
   }
 
   res.json({ id: user.id, email: user.email, role: user.role, name: user.name, phone: user.phone, restaurantId: user.restaurantId });

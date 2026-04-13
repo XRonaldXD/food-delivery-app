@@ -23,7 +23,7 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, role: string, name?: string, restaurantId?: string, restaurantPassword?: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
+  updateProfile: (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string; newRestaurantId?: string; restaurantPassword?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user: null, token: null, isLoading: false });
   };
 
-  const updateProfile = async (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+  const updateProfile = async (body: { name?: string; phone?: string; email?: string; currentPassword?: string; newPassword?: string; newRestaurantId?: string; restaurantPassword?: string }) => {
     const updated = await userApi.updateProfile(body);
     setState((prev) => ({ ...prev, user: prev.user ? { ...prev.user, ...updated } : updated }));
   };
