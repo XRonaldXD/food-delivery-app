@@ -10,6 +10,7 @@ import {
   Linking,
   Image,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { orderApi, locationApi } from '../../api/client';
 import { Order, DriverLocation } from '../../types';
 
@@ -31,19 +32,10 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '❌ Cancelled',
 };
 
-const LOCATION_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-
-function getStaticMapUrl(lat: number, lon: number): string {
-  return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}&zoom=15&size=600x280&markers=${lat},${lon},red`;
-}
-
 export default function OrderDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
-  const [locationUpdatedAt, setLocationUpdatedAt] = useState<string | null>(null);
-  const locationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -56,33 +48,9 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
     }
   }, [orderId]);
 
-  const fetchDriverLocation = useCallback(async () => {
-    try {
-      const loc = await locationApi.getOrderLocation(orderId);
-      setDriverLocation(loc);
-      setLocationUpdatedAt(new Date().toLocaleTimeString());
-    } catch {
-      // Location may not be available yet
-    }
-  }, [orderId]);
-
   useEffect(() => {
     load();
   }, [load]);
-
-  // Auto-poll driver location every 5 minutes when order is picked_up
-  useEffect(() => {
-    if (order?.status === 'picked_up') {
-      fetchDriverLocation();
-      locationPollRef.current = setInterval(fetchDriverLocation, LOCATION_POLL_INTERVAL_MS);
-    }
-    return () => {
-      if (locationPollRef.current) {
-        clearInterval(locationPollRef.current);
-        locationPollRef.current = null;
-      }
-    };
-  }, [order?.status, fetchDriverLocation]);
 
   const handleCancel = async () => {
     if (!order) return;
@@ -103,9 +71,23 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
     ]);
   };
 
-  const handleOpenDriverInMaps = () => {
-    if (!driverLocation) return;
-    Linking.openURL(`https://maps.google.com/?q=${driverLocation.latitude},${driverLocation.longitude}`);
+  const handleViewDriverLocation = async () => {
+    try {
+      const loc = await locationApi.getOrderLocation(orderId);
+      Alert.alert(
+        '📍 Driver Location',
+        `Latitude: ${loc.latitude.toFixed(5)}\nLongitude: ${loc.longitude.toFixed(5)}\nUpdated: ${new Date(loc.updatedAt).toLocaleTimeString()}`,
+        [
+          {
+            text: 'Open in Maps',
+            onPress: () => Linking.openURL(`https://maps.google.com/?q=${loc.latitude},${loc.longitude}`),
+          },
+          { text: 'OK', style: 'cancel' },
+        ],
+      );
+    } catch {
+      Alert.alert('Location Unavailable', 'Driver has not shared their location yet.');
+    }
   };
 
   const handleOpenChat = () => {
@@ -150,38 +132,13 @@ export default function OrderDetailScreen({ route, navigation }: { route: any; n
       <Text style={styles.meta}>Placed: {new Date(order.createdAt).toLocaleString()}</Text>
 
       {order.status === 'picked_up' && (
-        <View>
-          <Text style={styles.sectionTitle}>📍 Driver Location</Text>
-          {driverLocation ? (
-            <View>
-              <Image
-                source={{ uri: getStaticMapUrl(driverLocation.latitude, driverLocation.longitude) }}
-                style={styles.mapImage}
-                resizeMode="cover"
-              />
-              <View style={styles.mapMeta}>
-                <Text style={styles.mapCoords}>
-                  {driverLocation.latitude.toFixed(5)}, {driverLocation.longitude.toFixed(5)}
-                </Text>
-                {locationUpdatedAt && (
-                  <Text style={styles.mapUpdated}>Updated: {locationUpdatedAt}</Text>
-                )}
-              </View>
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.locationBtn} onPress={handleOpenDriverInMaps}>
-                  <Text style={styles.locationBtnText}>🗺️ Open in Maps</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.chatBtn} onPress={handleOpenChat}>
-                  <Text style={styles.chatBtnText}>💬 Chat with Driver</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.noLocationBox}>
-              <Text style={styles.noLocationText}>Driver has not shared their location yet.</Text>
-              <Text style={styles.noLocationSub}>Location updates every 5 minutes.</Text>
-            </View>
-          )}
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.locationBtn} onPress={handleViewDriverLocation}>
+            <Text style={styles.locationBtnText}>📍 View Driver Location</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.chatBtn} onPress={handleOpenChat}>
+            <Text style={styles.chatBtnText}>💬 Chat with Driver</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -210,34 +167,17 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 15, fontWeight: '700', color: '#FF6B35' },
   address: { fontSize: 14, color: '#555', lineHeight: 20 },
   meta: { fontSize: 12, color: '#aaa', marginTop: 8 },
-  mapImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    backgroundColor: '#e5e7eb',
-    marginBottom: 8,
-  },
-  mapMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  mapCoords: { fontSize: 11, color: '#888' },
-  mapUpdated: { fontSize: 11, color: '#888' },
-  noLocationBox: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  noLocationText: { fontSize: 14, color: '#555', marginBottom: 4 },
-  noLocationSub: { fontSize: 12, color: '#aaa' },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 20 },
   locationBtn: {
     flex: 1,
     backgroundColor: '#8b5cf6',
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
+    marginBottom: 4,
   },
-  locationBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
+  openMapsBtnText: { color: '#8b5cf6', fontWeight: '600', fontSize: 13 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
   chatBtn: {
     flex: 1,
     backgroundColor: '#3b82f6',
