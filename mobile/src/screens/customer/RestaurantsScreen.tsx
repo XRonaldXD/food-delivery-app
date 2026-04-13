@@ -28,7 +28,7 @@ export default function RestaurantsScreen({ navigation }: { navigation: any }) {
       const params: { search?: string; cuisine?: string } = {};
       if (searchText) params.search = searchText;
       if (cuisine) params.cuisine = cuisine;
-      const data = await restaurantApi.list(Object.keys(params).length ? params : undefined);
+      const data = await restaurantApi.list(params);
       setRestaurants(data);
     } catch (e: any) {
       Alert.alert('Error', e.message);

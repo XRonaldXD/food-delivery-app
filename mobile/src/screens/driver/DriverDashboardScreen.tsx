@@ -11,6 +11,8 @@ import {
 import { driverApi } from '../../api/client';
 import { Order } from '../../types';
 
+const COMMISSION = 0.1;
+
 interface Earnings {
   todayEarnings: number;
   monthlyEarnings: number;
@@ -100,7 +102,7 @@ export default function DriverDashboardScreen() {
             <View style={styles.deliveryTop}>
               <Text style={styles.deliveryId}>#{order.id.slice(-6).toUpperCase()}</Text>
               <Text style={styles.deliveryEarning}>
-                +${(order.total * 0.1).toFixed(2)}
+                +${(order.total * COMMISSION).toFixed(2)}
               </Text>
             </View>
             <Text style={styles.deliveryRest}>{order.restaurantName}</Text>
