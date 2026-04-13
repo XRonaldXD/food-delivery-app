@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { orderApi } from '../../api/client';
 import { Order } from '../../types';
+import { CHAT_RETENTION_MS } from '../../constants';
 
 const STATUS_COLOR: Record<string, string> = {
   accepted: '#3b82f6',
@@ -27,8 +28,14 @@ export default function DriverChatListScreen({ navigation }: { navigation: any }
   const load = useCallback(async () => {
     try {
       const data = await orderApi.mine();
-      // Show active and recent deliveries
-      setOrders([...data].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      // Show active orders and delivered orders within 30 days
+      const filtered = data.filter((o) => {
+        if (o.status === 'delivered') {
+          return Date.now() - new Date(o.updatedAt).getTime() <= CHAT_RETENTION_MS;
+        }
+        return o.status !== 'cancelled';
+      });
+      setOrders([...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {
@@ -84,7 +91,7 @@ export default function DriverChatListScreen({ navigation }: { navigation: any }
       renderItem={({ item }) => (
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigation.navigate('Chat', { orderId: item.id })}
+          onPress={() => navigation.navigate('Chat', { orderId: item.id, readOnly: item.status === 'delivered' })}
           activeOpacity={0.85}
         >
           <View style={styles.cardTop}>

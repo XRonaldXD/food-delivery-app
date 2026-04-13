@@ -130,7 +130,10 @@ export const adminApi = {
     }),
   deleteUser: (id: string) =>
     request<{ success: boolean }>(`/admin/users/${id}`, { method: 'DELETE' }),
-  orders: () => request<import('../types').Order[]>('/admin/orders'),
+  orders: (search?: string) => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+    return request<import('../types').Order[]>(`/admin/orders${qs}`);
+  },
   restaurants: () => request<import('../types').Restaurant[]>('/admin/restaurants'),
   revenue: () =>
     request<{

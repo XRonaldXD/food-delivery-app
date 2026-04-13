@@ -257,6 +257,7 @@ function AdminStack() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: 'Admin Dashboard' }} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: 'Manage Users' }} />
       <Stack.Screen name="AdminUserEdit" component={AdminUserEditScreen} options={{ title: 'User' }} />
+      <Stack.Screen name="AdminChatMessage" component={ChatScreen} options={{ title: 'Order Chat' }} />
     </Stack.Navigator>
   );
 }

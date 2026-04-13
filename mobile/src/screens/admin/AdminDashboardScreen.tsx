@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   SectionList,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import { adminApi } from '../../api/client';
 import { User, Order } from '../../types';
@@ -25,10 +26,12 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
   const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (q?: string) => {
     try {
-      const [u, o, r] = await Promise.all([adminApi.users(), adminApi.orders(), adminApi.revenue()]);
+      const [u, o, r] = await Promise.all([adminApi.users(q), adminApi.orders(q), adminApi.revenue()]);
       setUsers(u);
       setOrders(o.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
       setRevenue(r);
@@ -54,6 +57,12 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
     return () => unsubscribe?.();
   }, [navigation, load]);
 
+  const handleSearch = (text: string) => {
+    setSearch(text);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => load(text || undefined), 300);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -74,7 +83,16 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); load(); }}
+          onRefresh={() => { setRefreshing(true); load(search || undefined); }}
+        />
+      }
+      ListHeaderComponent={
+        <TextInput
+          style={styles.search}
+          placeholder="Search users, orders, restaurants, status…"
+          placeholderTextColor="#999"
+          value={search}
+          onChangeText={handleSearch}
         />
       }
       sections={[
@@ -130,14 +148,19 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
         if (item.type === 'order') {
           const o = item.item as Order;
           return (
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('AdminChatMessage', { orderId: o.id })}
+              activeOpacity={0.85}
+            >
               <View style={styles.row}>
                 <Text style={styles.cardTitle}>#{o.id.slice(-6).toUpperCase()}</Text>
                 <Text style={styles.statusText}>{o.status.replace('_', ' ')}</Text>
               </View>
               <Text style={styles.cardSub}>{o.restaurantName} → {o.deliveryAddress}</Text>
               <Text style={styles.cardSub}>${o.total.toFixed(2)}</Text>
-            </View>
+              <Text style={styles.chatHint}>Tap to view chat →</Text>
+            </TouchableOpacity>
           );
         }
         return null;
@@ -149,6 +172,16 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
 const styles = StyleSheet.create({
   list: { backgroundColor: '#f9f9f9' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  search: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -216,5 +249,6 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 15, fontWeight: '700', color: '#222' },
   cardSub: { fontSize: 13, color: '#666', marginTop: 2 },
   statusText: { fontSize: 13, color: '#888', textTransform: 'capitalize' },
+  chatHint: { fontSize: 12, color: '#FF6B35', fontWeight: '600', marginTop: 4 },
 });
 
