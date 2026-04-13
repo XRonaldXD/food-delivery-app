@@ -44,6 +44,16 @@ export default function AdminDashboardScreen({ navigation }: { navigation: any }
     load();
   }, [load]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.getParent()?.addListener('tabPress', () => {
+      if (navigation.isFocused()) {
+        setRefreshing(true);
+        load();
+      }
+    });
+    return () => unsubscribe?.();
+  }, [navigation, load]);
+
   if (loading) {
     return (
       <View style={styles.center}>

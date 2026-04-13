@@ -54,6 +54,7 @@ export const restaurants: Restaurant[] = [
     description: 'Juicy burgers made fresh daily',
     cuisine: 'American',
     imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
+    restaurantPassword: 'burgerpalace123',
     menu: [
       {
         id: 'item-1',
@@ -91,6 +92,7 @@ export const restaurants: Restaurant[] = [
     description: 'Authentic Neapolitan-style pizza',
     cuisine: 'Italian',
     imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400',
+    restaurantPassword: 'pizzafiesta123',
     menu: [
       {
         id: 'item-5',
@@ -128,6 +130,7 @@ export const restaurants: Restaurant[] = [
     description: 'Fresh sushi and Japanese cuisine',
     cuisine: 'Japanese',
     imageUrl: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400',
+    restaurantPassword: 'sushiworld123',
     menu: [
       {
         id: 'item-9',

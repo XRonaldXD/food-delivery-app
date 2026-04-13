@@ -60,6 +60,10 @@ router.put('/users/:id', async (req: AuthRequest, res: Response): Promise<void> 
 
 // DELETE /admin/users/:id
 router.delete('/users/:id', (req: AuthRequest, res: Response): void => {
+  if (req.params.id === req.user!.userId) {
+    res.status(403).json({ error: 'You cannot delete your own account' });
+    return;
+  }
   const idx = users.findIndex((u) => u.id === req.params.id);
   if (idx === -1) { res.status(404).json({ error: 'User not found' }); return; }
   users.splice(idx, 1);

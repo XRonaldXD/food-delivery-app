@@ -10,9 +10,11 @@ import {
   TextInput,
 } from 'react-native';
 import { adminApi } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { User } from '../../types';
 
 export default function AdminUsersScreen({ navigation }: { navigation: any }) {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,6 +47,10 @@ export default function AdminUsersScreen({ navigation }: { navigation: any }) {
   };
 
   const handleDelete = (user: User) => {
+    if (user.id === currentUser?.id) {
+      Alert.alert('Cannot Delete', 'You cannot delete your own account.');
+      return;
+    }
     Alert.alert('Delete User', `Delete ${user.name}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -91,7 +97,7 @@ export default function AdminUsersScreen({ navigation }: { navigation: any }) {
           >
             <View style={styles.cardRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.cardName}>{item.name}</Text>
+                <Text style={styles.cardName}>{item.name}{item.id === currentUser?.id ? ' (You)' : ''}</Text>
                 <Text style={styles.cardEmail}>{item.email}</Text>
                 {item.phone ? <Text style={styles.cardPhone}>{item.phone}</Text> : null}
               </View>
@@ -99,9 +105,11 @@ export default function AdminUsersScreen({ navigation }: { navigation: any }) {
                 <Text style={styles.badgeText}>{item.role}</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
-              <Text style={styles.deleteBtnText}>🗑 Delete</Text>
-            </TouchableOpacity>
+            {item.id !== currentUser?.id && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
+                <Text style={styles.deleteBtnText}>🗑 Delete</Text>
+              </TouchableOpacity>
+            )}
           </TouchableOpacity>
         )}
         ListEmptyComponent={<Text style={styles.empty}>No users found</Text>}

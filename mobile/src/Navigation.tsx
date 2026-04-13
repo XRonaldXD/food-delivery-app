@@ -26,6 +26,7 @@ import OrderDetailScreen from './screens/customer/OrderDetailScreen';
 import AvailableOrdersScreen from './screens/driver/AvailableOrdersScreen';
 import MyDeliveriesScreen from './screens/driver/MyDeliveriesScreen';
 import DeliveryDetailScreen from './screens/driver/DeliveryDetailScreen';
+import DriverChatListScreen from './screens/driver/DriverChatListScreen';
 
 // Restaurant screens
 import RestaurantOrdersScreen from './screens/restaurant/RestaurantOrdersScreen';
@@ -38,6 +39,7 @@ import RestaurantDashboardScreen from './screens/restaurant/RestaurantDashboardS
 import AdminDashboardScreen from './screens/admin/AdminDashboardScreen';
 import AdminUsersScreen from './screens/admin/AdminUsersScreen';
 import AdminUserEditScreen from './screens/admin/AdminUserEditScreen';
+import AdminChatScreen from './screens/admin/AdminChatScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -131,6 +133,17 @@ function DriverDeliveriesStack() {
   );
 }
 
+function DriverChatStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{ headerTintColor: '#FF6B35', headerTitleStyle: { color: '#222' } }}
+    >
+      <Stack.Screen name="DriverChatList" component={DriverChatListScreen} options={{ title: 'Chats' }} />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Order Chat' }} />
+    </Stack.Navigator>
+  );
+}
+
 function DriverTabs() {
   return (
     <Tab.Navigator
@@ -149,6 +162,11 @@ function DriverTabs() {
         name="DeliveriesTab"
         component={DriverDeliveriesStack}
         options={{ title: 'Deliveries', tabBarLabel: 'My Deliveries', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🚗</Text> }}
+      />
+      <Tab.Screen
+        name="ChatTab"
+        component={DriverChatStack}
+        options={{ title: 'Chat', tabBarLabel: 'Chat', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💬</Text> }}
       />
       <Tab.Screen
         name="ProfileTab"
@@ -231,6 +249,17 @@ function AdminStack() {
   );
 }
 
+function AdminChatStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{ headerTintColor: '#FF6B35', headerTitleStyle: { color: '#222' } }}
+    >
+      <Stack.Screen name="AdminChatList" component={AdminChatScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen name="AdminChatMessage" component={ChatScreen} options={{ title: 'Order Chat' }} />
+    </Stack.Navigator>
+  );
+}
+
 function AdminTabs() {
   return (
     <Tab.Navigator
@@ -244,6 +273,11 @@ function AdminTabs() {
         name="DashboardTab"
         component={AdminStack}
         options={{ title: 'Dashboard', tabBarLabel: 'Dashboard', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🛡️</Text> }}
+      />
+      <Tab.Screen
+        name="AdminChatTab"
+        component={AdminChatStack}
+        options={{ title: 'Chat', tabBarLabel: 'Chat', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💬</Text> }}
       />
       <Tab.Screen
         name="ProfileTab"
